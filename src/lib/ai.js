@@ -1,13 +1,16 @@
 import { retrieveContext } from '../data/knowledgeBase';
 
+// EXPORT THIS so other files can use the same defaults
 export const DEFAULT_CONFIG = {
   provider: 'gemini',
-  apiKey: 'AIzaSyCbTPTiyi4AJlGwb4xtAMbs-fMcl-qm03M',
+  // SECURE FIX: Key is now read from the Vercel/Vite environment variables.
+  // The user MUST set VITE_GEMINI_API_KEY in the Vercel dashboard.
+  apiKey: import.meta.env.VITE_GEMINI_API_KEY, 
   model: 'gemini-2.5-flash', 
   baseUrl: '/api/gemini', 
 };
 
-// Retry logic to handle rate limits (429)
+// Retry logic and function definitions remain the same, ensuring robustness.
 async function fetchWithRetry(url, options, retries = 3, backoff = 2000) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -36,7 +39,7 @@ export const generateBioResponse = async (userQuery, history = [], config = {}) 
   const baseUrl = finalConfig.baseUrl || finalConfig.endpoint;
   const context = retrieveContext(userQuery);
 
-  console.log(`[AI] Requesting ${modelName} | History Depth: ${history.length}`); 
+  console.log(`[AI] Requesting model: ${modelName} | History Depth: ${history.length}`); 
 
   let systemInstruction = `
     You are BioMentor, an advanced bioinformatics research assistant.

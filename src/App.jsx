@@ -8,13 +8,14 @@ import SequenceAligner from './pages/SequenceAligner';
 import PubmedSearch from './pages/PubmedSearch';
 import LabProtocols from './pages/LabProtocols';
 import CodonTable from './pages/CodonTable';
+import ProteinViewer from './pages/ProteinViewer';
 import Resources from './pages/Resources';
 import Tutorials from './pages/Tutorials';
 import StudyDeck from './pages/StudyDeck';
 import QuizInterface from './pages/QuizInterface';
 import ProblemSolver from './pages/ProblemSolver';
 import BioNotes from './pages/BioNotes';
-// import ProteinViewer from './pages/ProteinViewer'; // Uncomment if file exists
+// import ProteinViewer from './pages/ProteinViewer'; // Uncommented above
 
 export default function App() {
   return (
@@ -36,7 +37,7 @@ export default function App() {
               <Route path="/tools" element={<BioTools />} />
               <Route path="/aligner" element={<SequenceAligner />} />
               <Route path="/pubmed" element={<PubmedSearch />} />
-              {/* <Route path="/viewer" element={<ProteinViewer />} /> */}
+              <Route path="/viewer" element={<ProteinViewer />} /> 
 
               {/* References */}
               <Route path="/protocols" element={<LabProtocols />} />
