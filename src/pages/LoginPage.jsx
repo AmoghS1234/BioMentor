@@ -1,38 +1,47 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dna, ArrowRight, CheckCircle, Shield, Mail, Lock, User, AlertCircle, Loader } from 'lucide-react';
+import { Dna, ArrowRight, CheckCircle, Shield, Mail, Lock, User, AlertCircle, Loader, ArrowLeft } from 'lucide-react';
 import { useFirebase } from '../hooks/useFirebase';
 
 export default function LoginPage() {
-  const { loginWithEmail, registerWithEmail, loginAsGuest, user } = useFirebase();
+  const { loginWithEmail, registerWithEmail, loginAsGuest, resetPassword, user } = useFirebase();
   const navigate = useNavigate();
   
-  const [isRegister, setIsRegister] = useState(false);
+  const [mode, setMode] = useState('login'); // 'login', 'register', 'reset'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   
   const [formData, setFormData] = useState({ email: '', password: '', name: '' });
 
-  // Redirect if logged in
   if (user) navigate('/');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccessMsg('');
 
     try {
-      if (isRegister) {
+      if (mode === 'register') {
         await registerWithEmail(formData.email, formData.password, formData.name);
-      } else {
+        navigate('/');
+      } else if (mode === 'login') {
         await loginWithEmail(formData.email, formData.password, rememberMe);
+        navigate('/');
+      } else if (mode === 'reset') {
+        await resetPassword(formData.email);
+        setSuccessMsg("Password reset link sent! Check your email.");
+        setLoading(false);
       }
-      navigate('/');
     } catch (err) {
-      setError(err.message.replace('Firebase: ', ''));
-    } finally {
       setLoading(false);
+      let msg = err.message.replace('Firebase: ', '');
+      if (msg.includes('auth/invalid-credential')) msg = "Incorrect email or password.";
+      if (msg.includes('auth/email-already-in-use')) msg = "Email already registered.";
+      if (msg.includes('auth/weak-password')) msg = "Password should be at least 6 characters.";
+      setError(msg);
     }
   };
 
@@ -83,21 +92,28 @@ export default function LoginPage() {
         <div className="p-12 flex flex-col justify-center bg-panel">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-txt-primary">
-              {isRegister ? 'Create Account' : 'Welcome Back'}
+              {mode === 'register' ? 'Create Account' : mode === 'reset' ? 'Reset Password' : 'Welcome Back'}
             </h2>
             <p className="text-txt-secondary mt-2">
-              {isRegister ? 'Join the research community.' : 'Sign in to continue your work.'}
+              {mode === 'register' ? 'Join the research community.' : mode === 'reset' ? 'Enter your email to receive a reset link.' : 'Sign in to continue your work.'}
             </p>
           </div>
 
+          {/* Only show for Reset Mode */}
+          {mode === 'reset' && (
+             <button onClick={() => { setMode('login'); setError(''); setSuccessMsg(''); }} className="mb-4 flex items-center gap-2 text-sm text-txt-muted hover:text-brand transition-colors">
+                <ArrowLeft size={14} /> Back to Login
+             </button>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isRegister && (
+            {mode === 'register' && (
               <div className="relative group">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-txt-muted group-focus-within:text-brand transition-colors" size={20} />
                 <input 
                   type="text" 
                   placeholder="Full Name"
-                  required={isRegister}
+                  required
                   className="w-full bg-input border border-border rounded-xl pl-12 pr-4 py-3 text-txt-primary focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all placeholder-txt-muted/50"
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
@@ -117,30 +133,41 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-txt-muted group-focus-within:text-brand transition-colors" size={20} />
-              <input 
-                type="password" 
-                placeholder="Password"
-                required
-                className="w-full bg-input border border-border rounded-xl pl-12 pr-4 py-3 text-txt-primary focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all placeholder-txt-muted/50"
-                value={formData.password}
-                onChange={e => setFormData({...formData, password: e.target.value})}
-              />
-            </div>
-
-            {!isRegister && (
-              <div className="flex items-center gap-2 ml-1">
+            {mode !== 'reset' && (
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-txt-muted group-focus-within:text-brand transition-colors" size={20} />
                 <input 
-                  type="checkbox" 
-                  id="remember" 
-                  checked={rememberMe} 
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-border bg-input text-brand focus:ring-brand w-4 h-4"
+                  type="password" 
+                  placeholder="Password"
+                  required
+                  className="w-full bg-input border border-border rounded-xl pl-12 pr-4 py-3 text-txt-primary focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all placeholder-txt-muted/50"
+                  value={formData.password}
+                  onChange={e => setFormData({...formData, password: e.target.value})}
                 />
-                <label htmlFor="remember" className="text-xs text-txt-secondary cursor-pointer select-none hover:text-txt-primary transition-colors">
-                  Stay signed in on this device
-                </label>
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div className="flex items-center justify-between ml-1">
+                <div className="flex items-center gap-2">
+                    <input 
+                    type="checkbox" 
+                    id="remember" 
+                    checked={rememberMe} 
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded border-border bg-input text-brand focus:ring-brand w-4 h-4"
+                    />
+                    <label htmlFor="remember" className="text-xs text-txt-secondary cursor-pointer select-none hover:text-txt-primary transition-colors">
+                    Remember me
+                    </label>
+                </div>
+                <button 
+                    type="button"
+                    onClick={() => { setMode('reset'); setError(''); setSuccessMsg(''); }}
+                    className="text-xs text-brand hover:text-brand-light font-bold hover:underline"
+                >
+                    Forgot Password?
+                </button>
               </div>
             )}
 
@@ -150,38 +177,48 @@ export default function LoginPage() {
               </div>
             )}
 
+            {successMsg && (
+              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2 text-green-400 text-sm animate-fadeIn">
+                <CheckCircle size={16} /> {successMsg}
+              </div>
+            )}
+
             <button 
               type="submit" 
               disabled={loading}
               className="w-full py-3.5 bg-brand hover:bg-brand-hover text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
-              {loading ? <Loader className="animate-spin" size={20} /> : (isRegister ? 'Create Account' : 'Sign In')}
-              {!loading && <ArrowRight size={20} />}
+              {loading ? <Loader className="animate-spin" size={20} /> : (mode === 'register' ? 'Create Account' : mode === 'reset' ? 'Send Reset Link' : 'Sign In')}
+              {!loading && mode !== 'reset' && <ArrowRight size={20} />}
             </button>
           </form>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
-            <div className="relative flex justify-center text-xs uppercase"><span className="bg-panel px-4 text-txt-muted font-bold tracking-widest">Or</span></div>
-          </div>
+          {mode !== 'reset' && (
+            <>
+                <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-panel px-4 text-txt-muted font-bold tracking-widest">Or</span></div>
+                </div>
 
-          <button 
-            onClick={handleGuestLogin}
-            disabled={loading}
-            className="w-full py-3.5 bg-input hover:bg-border text-txt-primary font-bold rounded-xl transition-all border border-border text-sm disabled:opacity-50"
-          >
-            {loading ? 'Creating Session...' : 'Continue as Guest'}
-          </button>
+                <button 
+                    onClick={handleGuestLogin}
+                    disabled={loading}
+                    className="w-full py-3.5 bg-input hover:bg-border text-txt-primary font-bold rounded-xl transition-all border border-border text-sm disabled:opacity-50"
+                >
+                    {loading ? 'Creating Session...' : 'Continue as Guest'}
+                </button>
 
-          <p className="mt-6 text-center text-sm text-txt-secondary">
-            {isRegister ? "Already have an account?" : "Don't have an account?"}
-            <button 
-              onClick={() => { setIsRegister(!isRegister); setError(''); }}
-              className="ml-2 text-brand hover:underline font-bold"
-            >
-              {isRegister ? 'Sign In' : 'Register'}
-            </button>
-          </p>
+                <p className="mt-6 text-center text-sm text-txt-secondary">
+                    {mode === 'register' ? "Already have an account?" : "Don't have an account?"}
+                    <button 
+                    onClick={() => { setMode(mode === 'register' ? 'login' : 'register'); setError(''); setSuccessMsg(''); }}
+                    className="ml-2 text-brand hover:underline font-bold"
+                    >
+                    {mode === 'register' ? 'Sign In' : 'Register'}
+                    </button>
+                </p>
+            </>
+          )}
         </div>
       </div>
     </div>

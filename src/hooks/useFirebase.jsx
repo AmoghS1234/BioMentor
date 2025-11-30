@@ -10,12 +10,14 @@ import {
   updateProfile,
   setPersistence,
   browserLocalPersistence,
-  browserSessionPersistence
+  browserSessionPersistence,
+  sendPasswordResetEmail // NEW IMPORT
 } from 'firebase/auth';
 import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc } from 'firebase/firestore';
 
 const FirebaseContext = createContext();
 
+// ⚠️ REPLACE WITH YOUR ACTUAL CONFIG FROM FIREBASE CONSOLE
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -25,8 +27,6 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Initialize Firebase
-// We add a check to ensure config exists to prevent white-screen crashes if .env is missing
 const app = firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null;
 const auth = app ? getAuth(app) : null;
 const db = app ? getFirestore(app) : null;
@@ -36,7 +36,7 @@ export const FirebaseProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
-  // Helper: Ensure the user document exists in Firestore
+  // ... (Helper: ensureUserProfile remains the same)
   const ensureUserProfile = async (uid, email, name) => {
     if (!db) return;
     const userRef = doc(db, 'users', uid);
@@ -62,6 +62,7 @@ export const FirebaseProvider = ({ children }) => {
   };
 
   // --- AUTH ACTIONS ---
+
   const loginAsGuest = async () => {
     try { 
         await setPersistence(auth, browserLocalPersistence);
@@ -102,6 +103,15 @@ export const FirebaseProvider = ({ children }) => {
     }
   };
 
+  // NEW: Password Reset Function
+  const resetPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   // --- AUTH OBSERVER ---
   useEffect(() => {
     if (!auth) return;
@@ -112,10 +122,8 @@ export const FirebaseProvider = ({ children }) => {
       setUser(currentUser);
       
       if (currentUser) {
-        // 1. Ensure DB Profile Exists
         await ensureUserProfile(currentUser.uid, currentUser.email, currentUser.displayName);
 
-        // 2. Subscribe to Profile Updates
         const profileRef = doc(db, 'users', currentUser.uid);
         unsubscribeProfile = onSnapshot(profileRef, (docSnap) => {
             if (docSnap.exists()) setProfile(docSnap.data());
@@ -124,8 +132,6 @@ export const FirebaseProvider = ({ children }) => {
         setProfile(null);
         if (unsubscribeProfile) unsubscribeProfile();
       }
-      
-      // 3. Mark app as ready
       setIsAuthReady(true);
     });
 
@@ -137,10 +143,10 @@ export const FirebaseProvider = ({ children }) => {
 
   const value = {
     user, profile, isAuthReady, db, auth,
-    loginWithEmail, registerWithEmail, loginAsGuest, logout, updateProfileSetting
+    loginWithEmail, registerWithEmail, loginAsGuest, logout, updateProfileSetting, resetPassword
   };
 
-  if (!app) return <div className="p-10 text-center text-red-500">Error: Firebase config missing in .env file.</div>;
+  if (!app) return <div className="p-10 text-center text-red-500">Error: Firebase config missing.</div>;
 
   return <FirebaseContext.Provider value={value}>{children}</FirebaseContext.Provider>;
 };
