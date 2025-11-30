@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Plus, MessageSquare, Trash2, Settings, Bot, Download, Sparkles } from 'lucide-react';
+import { Send, Plus, MessageSquare, Trash2, Settings, Bot, Download, Sparkles, Database } from 'lucide-react';
 import { useChat } from '../hooks/useChat';
 
 const SUGGESTIONS = [
@@ -19,10 +19,17 @@ export default function ChatInterface() {
   const [input, setInput] = useState('');
   const [showSettings, setShowSettings] = useState(false);
 
+  // Helper to send message from suggested chips
+  const handleSuggestionClick = (suggestion) => {
+      setInput(suggestion);
+      sendMessage(suggestion);
+      setInput('');
+  };
+
   return (
     <div className="flex h-[calc(100vh-140px)] gap-6 animate-fadeIn">
       
-      {/* LEFT: History Sidebar */}
+      {/* LEFT: History Sidebar (Chat Sessions) */}
       <div className="w-64 flex flex-col pro-panel bg-panel overflow-hidden hidden md:flex">
         <div className="p-4 border-b border-border bg-input/20">
           <button 
@@ -106,6 +113,13 @@ export default function ChatInterface() {
                 onChange={(e) => setApiConfig({...apiConfig, model: e.target.value})}
                 className="w-full bg-input border border-border p-2 rounded mt-1 text-sm text-txt-primary"
              />
+             <label className="text-xs text-txt-muted uppercase font-bold mt-3 block">API Key</label>
+             <input 
+                type="password"
+                value={apiConfig.apiKey} 
+                onChange={(e) => setApiConfig({...apiConfig, apiKey: e.target.value})}
+                className="w-full bg-input border border-border p-2 rounded mt-1 text-sm text-txt-primary"
+             />
           </div>
         )}
 
@@ -120,7 +134,7 @@ export default function ChatInterface() {
                 {SUGGESTIONS.map((s, i) => (
                   <button 
                     key={i} 
-                    onClick={() => sendMessage(s)}
+                    onClick={() => handleSuggestionClick(s)}
                     className="p-3 text-sm text-left bg-page border border-border rounded-xl hover:border-brand/50 hover:text-brand transition-all flex items-center gap-2"
                   >
                     <Sparkles size={14} className="shrink-0" /> {s}
@@ -144,10 +158,31 @@ export default function ChatInterface() {
                   <div className="prose prose-invert prose-sm max-w-none">
                     <ReactMarkdown 
                       components={{
+                        // Custom styles for Tables, Code Blocks, and Text Density
                         code: ({node, inline, className, children, ...props}) => (
-                          <code className={`${inline ? 'bg-black/20 px-1 py-0.5 rounded' : 'block bg-black/40 p-3 rounded-lg border border-white/10 my-2 overflow-x-auto'} font-mono text-xs`} {...props}>
+                          <code className={`${inline ? 'bg-black/20 px-1 py-0.5 rounded text-yellow-300' : 'block bg-black/40 p-3 rounded-lg border border-white/10 my-2 overflow-x-auto text-yellow-300'} font-mono text-xs`} {...props}>
                             {children}
                           </code>
+                        ),
+                        table: ({ children }) => (
+                          <div className="overflow-x-auto my-4">
+                            <table className="w-full text-xs border-collapse border border-border text-txt-secondary">
+                              {children}
+                            </table>
+                          </div>
+                        ),
+                        th: ({ children }) => (
+                          <th className="p-2 border border-border bg-input/40 text-txt-primary font-bold">
+                            {children}
+                          </th>
+                        ),
+                        td: ({ children }) => (
+                          <td className="p-2 border border-border">
+                            {children}
+                          </td>
+                        ),
+                        p: ({ children }) => (
+                          <p className="mb-3 text-txt-secondary">{children}</p>
                         )
                       }}
                     >

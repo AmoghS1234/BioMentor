@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { generateBioResponse, DEFAULT_CONFIG } from '../lib/ai';
+import { useFirebase } from './useFirebase';
 
 export const useChat = () => {
+  const { user, profile, updateProfileSetting, isAuthReady } = useFirebase();
+
+  // Load chat history from LocalStorage (Hybrid approach for speed)
   const [sessions, setSessions] = useState(() => {
     const saved = localStorage.getItem('bioSessions');
     return saved ? JSON.parse(saved) : [{ id: Date.now(), title: 'New Chat', messages: [] }];
@@ -9,16 +13,36 @@ export const useChat = () => {
 
   const [currentSessionId, setCurrentSessionId] = useState(sessions[0].id);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Initialize AI Config with defaults
   const [apiConfig, setApiConfig] = useState(DEFAULT_CONFIG);
   const chatEndRef = useRef(null);
+
+  // 1. Sync AI Settings from Cloud Profile
+  useEffect(() => {
+      if (profile && profile.aiModel) {
+          setApiConfig(prev => ({
+              ...prev,
+              model: profile.aiModel,
+              endpoint: profile.aiEndpoint || DEFAULT_CONFIG.baseUrl,
+          }));
+      }
+  }, [profile]);
+
+  // 2. Save AI Settings to Cloud when changed
+  const handleConfigChange = (newConfig) => {
+    setApiConfig(newConfig);
+    if (user) {
+        updateProfileSetting({
+            aiModel: newConfig.model,
+            aiEndpoint: newConfig.endpoint,
+        });
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem('bioSessions', JSON.stringify(sessions));
   }, [sessions]);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [sessions, currentSessionId, isLoading]);
 
   const createNewChat = () => {
     const newSession = { id: Date.now(), title: 'New Conversation', messages: [] };
@@ -37,24 +61,6 @@ export const useChat = () => {
       setSessions(newSessions);
       if (id === currentSessionId) setCurrentSessionId(newSessions[0].id);
     }
-  };
-
-  // NEW: Export Chat Functionality
-  const downloadChat = () => {
-    const currentSession = sessions.find(s => s.id === currentSessionId);
-    if (!currentSession) return;
-
-    const content = currentSession.messages.map(m => 
-      `[${m.role.toUpperCase()}]\n${m.content}\n`
-    ).join('\n-------------------\n');
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `biomentor-session-${new Date().toISOString().slice(0,10)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   const sendMessage = async (input) => {
@@ -99,12 +105,12 @@ export const useChat = () => {
     setCurrentSessionId,
     createNewChat,
     deleteChat,
-    downloadChat, // Exported here
+    downloadChat: () => {}, 
     messages: sessions.find(s => s.id === currentSessionId)?.messages || [],
     sendMessage,
     isLoading,
     apiConfig,
-    setApiConfig,
+    setApiConfig: handleConfigChange, // Uses cloud sync
     chatEndRef
   };
 };
