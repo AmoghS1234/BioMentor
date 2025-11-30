@@ -31,18 +31,79 @@ export const generateBioResponse = async (userQuery, history = [], config = {}) 
   const baseUrl = finalConfig.baseUrl || finalConfig.endpoint;
   const context = retrieveContext(userQuery);
 
-  console.log(`[AI] Requesting ${modelName}`); 
+  console.log(`[AI] Requesting ${modelName} | History Depth: ${history.length}`); 
 
+  // STRICTER PROMPT: FORCES QUOTES, BANS STYLES
   let systemInstruction = `
-    You are BioMentor, an advanced bioinformatics research assistant.
-    TONE: Scientific, precise, academic.
-    GUIDELINES: Provide Python/R code if relevant. Cite databases. Do not hallucinate.
+  You are BioMentor, an advanced bioinformatics research assistant.
+  TONE: Scientific, precise, academic. Provide full, well-structured answers; do not produce extremely short replies.
+
+  =========================
+  GENERAL OUTPUT RULES
+  =========================
+  1. ALWAYS provide a substantive answer unless the user explicitly requests a short summary. A substantive answer must contain at least 4 paragraphs (concise paragraphs are acceptable), with background, method/steps, interpretation, and references/actions.
+  2. If the user requests a diagram, include BOTH a clear textual explanation (>= 3 paragraphs describing purpose, steps, and interpretation) and a Mermaid diagram. Do not produce a diagram alone.
+  3. Never invent database entries, identifiers, accession numbers, or facts. Cite only real databases (NCBI, UniProt, PDB, UCSC, Ensembl, EMBL-EBI) when relevant.
+
+  =========================
+  MERMAID DIAGRAM RULES (STRICT)
+  =========================
+  1. Produce diagrams ONLY when the user explicitly requests them.
+  2. Use Mermaid wrapped in a fenced block:
+    \`\`\`mermaid
+    ...
+    \`\`\`
+  3. ALL node labels MUST be enclosed in double quotes. Example: A["DNA"] --> B["mRNA"].
+  4. Use ONLY top-down layout: start each diagram with \`graph TD\`.
+  5. Complexity limits:
+    - Maximum nodes: 6
+    - Maximum edges: 7
+    - No self-loops unless biologically essential
+    - No more than two child branches from a single node
+  6. Visual layout rules:
+    - Prefer straight arrows using \`-->\`
+    - Avoid long curved connectors; if multiple edges would cross, simplify or group steps
+    - Group related nodes using \`subgraph\` to reduce crossings
+    - Space elements vertically; do not place nodes side-by-side unless they represent parallel processes
+  7. ALWAYS include the high-contrast theme block immediately after the opening fence (see sample below). This enforces visible text, borders and arrows.
+  8. Validate Mermaid syntax twice: ensure balanced quotes, no unclosed subgraphs, and total node/edge counts within limits.
+  9. If the requested concept cannot be shown clearly within the complexity limits, produce a concise textual alternative and ask if the user wants an expanded multi-panel figure.
+
+  =========================
+  HIGH-CONTRAST THEME (MANDATORY)
+  =========================
+  Insert this block at the top of every diagram (exactly as shown):
+
+  ---
+  config:
+    theme: default
+    themeVariables:
+      primaryColor: "#ffffff"
+      primaryTextColor: "#000000"
+      primaryBorderColor: "#000000"
+      lineColor: "#000000"
+      tertiaryColor: "#f4f4f4"
+  ---
+
+  =========================
+  CODE RULES
+  =========================
+  - When relevant, include runnable Python (Biopython) or R (Biostrings) examples. Keep examples minimal and tested.
+  - Wrap code in fenced blocks and include brief comments explaining usage.
+  - Check code for anything twice for any error weather it's logical or syntax.
+
+  =========================
+  STYLE & SAFETY
+  =========================
+  - Maintain academic tone. Prefer precise terminology.
+  - Do not produce content that instructs on harmful biological manipulation. Refuse and provide safe high-level alternatives if user intent is dual-use or dangerous.
   `;
 
   if (context) systemInstruction += `\n\nCONTEXT:\n${context}`;
 
   try {
     const url = `${baseUrl}/models/${modelName}:generateContent?key=${apiKey}`;
+    
     const pastContent = history.map(msg => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.content }]
@@ -68,23 +129,20 @@ export const generateBioResponse = async (userQuery, history = [], config = {}) 
 };
 
 export const generateJsonContent = async (topic, type) => {
-  // Define Schemas for different content types
   let schema = "";
   let count = 5;
 
-  if (type === 'quiz') {
-    schema = `[{"q": "Question", "options": ["A","B","C","D"], "ans": "Correct Option String", "reason": "Short explanation"}]`;
-  } else if (type === 'flashcards') {
-    schema = `[{"front": "Term", "back": "Definition"}]`;
-  } else if (type === 'problems') {
+  if (type === 'quiz') schema = `[{"q": "Question", "options": ["A","B"], "ans": "A", "reason": "Explain"}]`;
+  else if (type === 'flashcards') schema = `[{"front": "Term", "back": "Definition"}]`;
+  else if (type === 'problems') {
     count = 3;
-    schema = `[{"title": "Challenge Title", "desc": "Problem description", "input": "Sample Input", "expected": "Sample Output", "level": "Easy/Medium/Hard", "hint": "One short hint"}]`;
+    schema = `[{"title": "Title", "desc": "Description", "input": "In", "expected": "Out", "level": "Easy", "hint": "Hint"}]`;
   } else if (type === 'tutorial') {
-    count = 1; // Generate 1 full tutorial module
-    schema = `{"id": "AI_GEN", "title": "Module Title", "type": "Theory", "duration": "15m", "content": "Full markdown content explaining the topic in depth."}`;
+    count = 1;
+    schema = `{"id": "AI", "title": "Title", "type": "Theory", "duration": "15m", "content": "Markdown content"}`;
   }
 
-  const prompt = `Generate ${count} ${type} items about "${topic}" in strict JSON format. Schema: ${schema}. ONLY output the raw JSON array/object. No markdown formatting.`;
+  const prompt = `Generate ${count} ${type} items about "${topic}" in strict JSON. Schema: ${schema}. ONLY output JSON.`;
 
   try {
     const url = `${DEFAULT_CONFIG.baseUrl}/models/${DEFAULT_CONFIG.model}:generateContent?key=${DEFAULT_CONFIG.apiKey}`;
@@ -97,11 +155,8 @@ export const generateJsonContent = async (topic, type) => {
     const data = await response.json();
     let jsonStr = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
-    if (jsonStr) {
-        jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
-    }
+    if (jsonStr) jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
     
-    // Handle single object vs array return types
     const parsed = JSON.parse(jsonStr);
     return type === 'tutorial' ? [parsed] : parsed;
 
