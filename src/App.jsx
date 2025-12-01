@@ -62,26 +62,26 @@ export default function App() {
             <Routes>
               {/* Core */}
               <Route path="/" element={<Home />} />
-              <Route path="/chat" element={<ChatInterface />} />
-              <Route path="/notes" element={<BioNotes />} />
-              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/" element={<ChatInterface />} />
+              <Route path="/" element={<BioNotes />} />
+              <Route path="/" element={<UserProfile />} />
 
               {/* Tools */}
-              <Route path="/tools" element={<BioTools />} />
-              <Route path="/aligner" element={<SequenceAligner />} />
-              <Route path="/pubmed" element={<PubmedSearch />} />
-              <Route path="/viewer" element={<ProteinViewer />} />
+              <Route path="/" element={<BioTools />} />
+              <Route path="/" element={<SequenceAligner />} />
+              <Route path="/" element={<PubmedSearch />} />
+              <Route path="/" element={<ProteinViewer />} />
 
               {/* References */}
-              <Route path="/protocols" element={<LabProtocols />} />
-              <Route path="/codon" element={<CodonTable />} />
-              <Route path="/resources" element={<Resources />} />
+              <Route path="/" element={<LabProtocols />} />
+              <Route path="/" element={<CodonTable />} />
+              <Route path="/" element={<Resources />} />
 
               {/* Learning */}
-              <Route path="/tutorials" element={<Tutorials />} />
-              <Route path="/quiz" element={<QuizInterface />} />
-              <Route path="/flashcards" element={<StudyDeck />} />
-              <Route path="/problems" element={<ProblemSolver />} />
+              <Route path="/" element={<Tutorials />} />
+              <Route path="/" element={<QuizInterface />} />
+              <Route path="/" element={<StudyDeck />} />
+              <Route path="/" element={<ProblemSolver />} />
               
               {/* Redirect unknown paths to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
