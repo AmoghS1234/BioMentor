@@ -62,15 +62,15 @@ export default function App() {
             <Routes>
               {/* Core */}
               <Route path="/" element={<Home />} />
-              <Route path="/" element={<ChatInterface />} />
-              <Route path="/" element={<BioNotes />} />
-              <Route path="/" element={<UserProfile />} />
+              <Route path="/chat" element={<ChatInterface />} />
+              <Route path="/notes" element={<BioNotes />} />
+              <Route path="/profile" element={<UserProfile />} />
 
               {/* Tools */}
               <Route path="/" element={<BioTools />} />
               <Route path="/" element={<SequenceAligner />} />
               <Route path="/" element={<PubmedSearch />} />
-              <Route path="/" element={<ProteinViewer />} />
+              <Route path="/viewer" element={<ProteinViewer />} />
 
               {/* References */}
               <Route path="/" element={<LabProtocols />} />
