@@ -124,19 +124,25 @@ export const FirebaseProvider = ({ children }) => {
   };
 
   // --- NEW: WIPE DATA FUNCTION ---
+// --- NEW: WIPE DATA FUNCTION (AGGRESSIVE) ---
   const clearAccountData = async () => {
     if (!user || !db) return;
 
     try {
-      // 1. Delete Flashcards Sub-collection
+      // 1. Delete "flashcards" Sub-collection
       const cardsRef = collection(db, `users/${user.uid}/flashcards`);
-      const snapshot = await getDocs(cardsRef);
-      const deletePromises = snapshot.docs.map(d => deleteDoc(d.ref));
-      await Promise.all(deletePromises);
+      const cardSnap = await getDocs(cardsRef);
+      const cardPromises = cardSnap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(cardPromises);
 
-      // 2. Reset Main User Document (Wipe XP, Quizzes, Settings)
+      // 2. Delete "chats" Sub-collection (This was missing!)
+      const chatsRef = collection(db, `users/${user.uid}/chats`);
+      const chatSnap = await getDocs(chatsRef);
+      const chatPromises = chatSnap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(chatPromises);
+
+      // 3. Reset Main User Document (Wipe XP, settings, etc.)
       const userRef = doc(db, 'users', user.uid);
-      // We overwrite using setDoc to clear custom fields like customQuizzes
       await setDoc(userRef, {
         uid: user.uid,
         email: user.email || 'Anonymous',
@@ -144,16 +150,20 @@ export const FirebaseProvider = ({ children }) => {
         createdAt: Date.now(),
         lastLogin: Date.now(),
         xp: 0,
-        hasSeenTour: false, // Reset tour so they see it again
+        hasSeenTour: false, // Reset tour
         aiModel: 'gemini-2.5-flash',
         aiEndpoint: '/api/gemini'
       });
 
-      // 3. Clear Local Storage (Notes & Protocols)
+      // 4. Clear ALL Local Storage items used by the app
       localStorage.removeItem('bioNotes');
       localStorage.removeItem('custom-protocols');
+      localStorage.removeItem('bio-chat-sessions'); // Clear any cached chat lists
       
-      // 4. Reload page to reflect empty state
+      // Clear Session Storage (like guest tour flags)
+      sessionStorage.clear();
+
+      // 5. Reload page to force a fresh state
       window.location.reload();
 
     } catch (err) {
