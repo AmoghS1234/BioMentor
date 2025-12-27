@@ -7,27 +7,27 @@ export default {
   theme: {
     extend: {
       colors: {
-        page: '#09090b',       // Zinc-950 (True Dark Background)
-        panel: '#18181b',      // Zinc-900 (Cards/Sidebar)
-        input: '#27272a',      // Zinc-800 (Inputs)
+        // --- THIS PART IS CRITICAL ---
+        page: 'var(--page)', 
+        panel: 'var(--panel)',
+        input: 'var(--input)',
         
         brand: {
-          DEFAULT: '#3b82f6',  // Blue-500 (Scientific Blue)
-          hover: '#2563eb',    // Blue-600
-          light: '#60a5fa',    // Blue-400
-          subtle: '#1e3a8a',   // Deep Blue (for subtle backgrounds)
+          DEFAULT: 'var(--brand)', 
+          hover: 'var(--brand-hover)',
+          light: 'var(--brand-light)', 
         },
         
         txt: {
-          primary: '#f4f4f5',   // Zinc-100 (High contrast text)
-          secondary: '#a1a1aa', // Zinc-400 (Muted text)
-          muted: '#52525b',     // Zinc-600 (Labels)
+          primary: 'var(--txt-primary)',
+          secondary: 'var(--txt-secondary)', 
+          muted: 'var(--txt-muted)',     
         },
 
         border: {
-          DEFAULT: '#27272a',   // Zinc-800
-          subtle: '#3f3f46',    // Zinc-700
+          DEFAULT: 'var(--border)',   
         }
+        // -----------------------------
       }
     },
   },

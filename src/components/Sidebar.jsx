@@ -4,7 +4,7 @@ import { useFirebase } from '../hooks/useFirebase';
 import { 
   Home, MessageSquare, Database, GraduationCap, 
   BrainCircuit, Layers, Code, Dna, Menu, X, 
-  Calculator, Search, GitMerge, ClipboardList, Grid, Activity, FileText, 
+  Calculator, Search, GitMerge, ClipboardList, Grid, FileText, 
   User, LogOut, Settings, ChevronUp, LogIn 
 } from 'lucide-react';
 
@@ -15,9 +15,8 @@ export default function Sidebar() {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, profile, isAuthReady, logout } = useFirebase();
+  const { user, logout, isAuthReady } = useFirebase();
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -28,8 +27,10 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // We assign specific IDs to groups for the Tour to find
   const navGroups = [
     {
+      id: "nav-workspace", // <--- ID for Tour
       title: "Workspace",
       items: [
         { path: '/', label: 'Dashboard', icon: <Home size={18} /> },
@@ -38,6 +39,7 @@ export default function Sidebar() {
       ]
     },
     {
+      id: "nav-tools", // <--- ID for Tour
       title: "Analysis Tools",
       items: [
         { path: '/tools', label: 'Bio Toolkit', icon: <Calculator size={18} /> },
@@ -47,6 +49,7 @@ export default function Sidebar() {
       ]
     },
     {
+      id: "nav-ref", // <--- ID for Tour
       title: "Reference Data",
       items: [
         { path: '/protocols', label: 'Lab Protocols', icon: <ClipboardList size={18} /> },
@@ -55,6 +58,7 @@ export default function Sidebar() {
       ]
     },
     {
+      id: "nav-learn", // <--- ID for Tour
       title: "Knowledge Base",
       items: [
         { path: '/tutorials', label: 'Tutorials', icon: <GraduationCap size={18} /> },
@@ -70,16 +74,8 @@ export default function Sidebar() {
     if (window.innerWidth < 768) setIsOpen(false);
   };
 
-  // FIXED: Removed navigate('/login'). 
-  // The App component detects the user change and switches views automatically.
-  const handleLogout = async () => {
-      setShowUserMenu(false); // Close menu immediately
-      await logout();
-  };
-
   return (
     <>
-      {/* Mobile Toggle */}
       <button 
         className="md:hidden fixed top-4 left-4 z-50 p-2 bg-brand text-white rounded-lg shadow-lg"
         onClick={() => setIsOpen(!isOpen)}
@@ -87,11 +83,10 @@ export default function Sidebar() {
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Sidebar Container */}
-      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-page border-r border-border text-slate-300 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 flex flex-col shadow-2xl`}>
+      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-page border-r border-border transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 flex flex-col shadow-2xl transition-colors duration-300`}>
         
-        {/* Logo */}
-        <div className="flex items-center gap-3 h-16 px-6 border-b border-border bg-page shrink-0">
+        {/* Logo with ID */}
+        <div id="sidebar-logo" className="flex items-center gap-3 h-16 px-6 border-b border-border bg-page shrink-0 transition-colors duration-300">
           <div className="bg-gradient-to-br from-brand to-indigo-600 p-1.5 rounded-lg shadow-lg shadow-brand/20">
             <Dna size={20} className="text-white" />
           </div>
@@ -100,10 +95,9 @@ export default function Sidebar() {
           </span>
         </div>
 
-        {/* Navigation */}
         <nav className="p-4 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
           {navGroups.map((group, idx) => (
-            <div key={idx}>
+            <div key={idx} id={group.id}> {/* <--- Attach ID here */}
               <h3 className="text-xs font-bold text-txt-muted uppercase tracking-wider mb-2 px-3">
                 {group.title}
               </h3>
@@ -117,7 +111,7 @@ export default function Sidebar() {
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
                         isActive
                           ? 'bg-brand/10 text-brand border border-brand/20' 
-                          : 'text-slate-400 hover:bg-panel hover:text-txt-primary hover:border-border'
+                          : 'text-txt-secondary hover:bg-panel hover:text-txt-primary hover:border-border'
                       }`}
                     >
                       {item.icon}
@@ -130,10 +124,7 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        {/* User Menu (Footer) */}
-        <div className="p-4 border-t border-border bg-panel relative" ref={menuRef}>
-          
-          {/* Popover Menu */}
+        <div className="p-4 border-t border-border bg-panel relative transition-colors duration-300" ref={menuRef}>
           {showUserMenu && (
             <div className="absolute bottom-full left-4 right-4 mb-2 bg-panel border border-border rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-50">
                 <div className="p-3 border-b border-border bg-input/20">
@@ -144,22 +135,22 @@ export default function Sidebar() {
                     <button onClick={() => { navigate('/profile'); setShowUserMenu(false); }} className="w-full text-left px-3 py-2 text-sm text-txt-secondary hover:bg-page hover:text-txt-primary rounded-lg flex items-center gap-2">
                         <User size={16} /> Account Profile
                     </button>
-                    {/* Placeholder for Settings */}
-                    <button onClick={() => setShowUserMenu(false)} className="w-full text-left px-3 py-2 text-sm text-txt-secondary hover:bg-page hover:text-txt-primary rounded-lg flex items-center gap-2">
+                    <button onClick={() => { navigate('/settings'); setShowUserMenu(false); }} className="w-full text-left px-3 py-2 text-sm text-txt-secondary hover:bg-page hover:text-txt-primary rounded-lg flex items-center gap-2">
                         <Settings size={16} /> Settings
                     </button>
                 </div>
                 <div className="p-1 border-t border-border mt-1">
-                    <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg flex items-center gap-2">
+                    <button onClick={logout} className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg flex items-center gap-2">
                         <LogOut size={16} /> Sign Out
                     </button>
                 </div>
             </div>
           )}
 
-          {/* Trigger Button */}
+          {/* User Menu Trigger with ID */}
           {isAuthReady && user ? (
             <button 
+              id="user-menu-trigger" 
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-page transition-colors group"
             >
@@ -169,18 +160,12 @@ export default function Sidebar() {
                 </div>
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-xs font-bold text-txt-primary truncate">{user.displayName || 'Guest'}</p>
-                  <p className="text-[10px] text-txt-muted truncate">
-                    {user.isAnonymous ? 'Guest Session' : 'Pro Plan'}
-                  </p>
                 </div>
               </div>
               <ChevronUp size={16} className="text-txt-muted group-hover:text-txt-primary transition-colors" />
             </button>
           ) : (
-            <button 
-                onClick={() => navigate('/login')}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-brand hover:bg-brand-hover text-white rounded-xl text-sm font-bold transition-colors shadow-lg"
-            >
+             <button onClick={() => navigate('/login')} className="w-full flex items-center justify-center gap-2 py-3 bg-brand text-white rounded-xl">
                 <LogIn size={16} /> Sign In
             </button>
           )}

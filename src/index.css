@@ -2,8 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Default Theme Variables (Zinc/Blue) */
+:root {
+  --page: #09090b;
+  --panel: #18181b;
+  --input: #27272a;
+  --border: #27272a;
+  
+  --txt-primary: #f4f4f5;
+  --txt-secondary: #a1a1aa;
+  --txt-muted: #52525b;
+  
+  --brand: #3b82f6;
+  --brand-hover: #2563eb;
+  --brand-light: #60a5fa;
+}
+
 @layer utilities {
-  /* Custom Scrollbar for Scientific Dashboard feel */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -12,25 +27,26 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-zinc-700 rounded-full;
+    @apply bg-zinc-700/50 rounded-full;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-zinc-600;
   }
 }
 
-/* Base Styles */
 body {
-  @apply bg-page text-txt-primary antialiased;
+  background-color: var(--page);
+  color: var(--txt-primary);
+  @apply antialiased transition-colors duration-300; 
 }
 
-/* Utility Classes for Components */
+/* Component Classes */
 .pro-panel {
-  @apply bg-panel border border-border rounded-xl shadow-sm;
+  @apply bg-panel border border-border rounded-xl shadow-sm transition-colors duration-300;
 }
 
 .pro-input {
-  @apply w-full bg-input border border-border rounded-lg px-4 py-2 text-txt-primary focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all placeholder-zinc-600;
+  @apply w-full bg-input border border-border rounded-lg px-4 py-2 text-txt-primary focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all placeholder-txt-muted;
 }
 
 .pro-btn {
@@ -44,4 +60,73 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Driver.js Dynamic Theme Overrides --- */
+
+/* 1. The Main Popup Box */
+.driver-popover.driverjs-theme {
+  background-color: var(--panel); /* Uses current theme panel color */
+  color: var(--txt-primary);      /* Uses current theme text */
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* 2. Title & Text */
+.driver-popover.driverjs-theme .driver-popover-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--brand);            /* Title uses brand color */
+}
+
+.driver-popover.driverjs-theme .driver-popover-description {
+  color: var(--txt-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* 3. Navigation Buttons (Next/Prev) */
+.driver-popover.driverjs-theme button.driver-popover-next-btn,
+.driver-popover.driverjs-theme button.driver-popover-prev-btn {
+  background-color: var(--brand) !important; /* Button background matches theme */
+  color: #ffffff !important;                 /* White text is readable on all your brand colors */
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-shadow: none;
+  transition: filter 0.2s;
+}
+
+.driver-popover.driverjs-theme button.driver-popover-next-btn:hover,
+.driver-popover.driverjs-theme button.driver-popover-prev-btn:hover {
+  filter: brightness(1.1); /* Slight glow on hover */
+}
+
+/* 4. The "X" Close Button */
+.driver-popover.driverjs-theme button.driver-popover-close-btn {
+  color: var(--txt-muted) !important;
+}
+.driver-popover.driverjs-theme button.driver-popover-close-btn:hover {
+  color: var(--txt-primary) !important;
+}
+
+/* 5. The Tiny Arrow (Triangle) - This is tricky! 
+   We have to target all 4 possible directions to color the triangle correctly. */
+.driver-popover.driverjs-theme .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: var(--panel); 
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: var(--panel); 
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: var(--panel); 
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: var(--panel); 
 }

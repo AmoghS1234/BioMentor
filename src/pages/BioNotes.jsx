@@ -33,11 +33,14 @@ export default function BioNotes() {
 
   return (
     <div className="h-[calc(100vh-140px)] flex gap-6 animate-fadeIn">
-      <div className="w-64 flex flex-col pro-panel bg-panel rounded-xl overflow-hidden h-full">
+      {/* SIDEBAR ID */}
+      <div id="notes-sidebar" className="w-64 flex flex-col pro-panel bg-panel rounded-xl overflow-hidden h-full">
         <div className="p-4 border-b border-border bg-input/20">
-          <button onClick={createNote} className="w-full pro-btn flex items-center justify-center gap-2"><Plus size={16} /> New Note</button>
+          {/* BUTTON ID */}
+          <button id="notes-add-btn" onClick={createNote} className="w-full pro-btn flex items-center justify-center gap-2"><Plus size={16} /> New Note</button>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        {/* LIST ID */}
+        <div id="notes-list" className="flex-1 overflow-y-auto p-2 space-y-1">
           {notes.map(note => (
             <div key={note.id} onClick={() => setActiveId(note.id)} className={`group p-3 rounded-lg cursor-pointer transition-all ${activeId === note.id ? 'bg-brand/10 border border-brand/50' : 'hover:bg-page border border-transparent'}`}>
               <div className="flex justify-between items-start">
@@ -51,9 +54,12 @@ export default function BioNotes() {
       </div>
 
       {activeId ? (
-        <div className="flex-1 pro-panel bg-panel rounded-xl p-6 flex flex-col h-full">
-          <input value={activeNote.title} onChange={(e) => updateNote('title', e.target.value)} className="text-2xl font-bold bg-transparent border-none focus:ring-0 text-txt-primary placeholder-txt-muted mb-4 outline-none" placeholder="Note Title" />
-          <textarea value={activeNote.content} onChange={(e) => updateNote('content', e.target.value)} className="flex-1 w-full bg-page/50 rounded-lg p-4 text-txt-secondary resize-none border-none focus:ring-2 focus:ring-brand/50 leading-relaxed font-mono outline-none" placeholder="Start typing your observations..." />
+        // EDITOR ID
+        <div id="notes-editor" className="flex-1 pro-panel bg-panel rounded-xl p-6 flex flex-col h-full">
+          {/* TITLE INPUT ID */}
+          <input id="notes-title-input" value={activeNote.title} onChange={(e) => updateNote('title', e.target.value)} className="text-2xl font-bold bg-transparent border-none focus:ring-0 text-txt-primary placeholder-txt-muted mb-4 outline-none" placeholder="Note Title" />
+          {/* TEXTAREA ID */}
+          <textarea id="notes-content-area" value={activeNote.content} onChange={(e) => updateNote('content', e.target.value)} className="flex-1 w-full bg-page/50 rounded-lg p-4 text-txt-secondary resize-none border-none focus:ring-2 focus:ring-brand/50 leading-relaxed font-mono outline-none" placeholder="Start typing your observations..." />
           <div className="flex justify-between items-center mt-4 text-xs text-txt-muted">
              <span>Auto-saved to local storage</span>
              <span className="flex items-center gap-1"><Save size={12} /> {activeNote.lastEdited || 'Just now'}</span>

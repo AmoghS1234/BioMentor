@@ -34,7 +34,8 @@ export default function CodonTable() {
 
   return (
     <div className="space-y-6 animate-fadeIn h-[calc(100vh-100px)] flex flex-col">
-      <div className="flex items-center gap-3 border-b border-border pb-4">
+      {/* HEADER ID */}
+      <div id="codon-header" className="flex items-center gap-3 border-b border-border pb-4">
         <Grid className="text-brand" />
         <div>
           <h2 className="text-2xl font-bold text-txt-primary">Standard Genetic Code</h2>
@@ -42,7 +43,8 @@ export default function CodonTable() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto bg-panel p-6 border border-border rounded-xl">
+      {/* TABLE GRID ID */}
+      <div id="codon-grid" className="flex-1 overflow-auto bg-panel p-6 border border-border rounded-xl">
         <div className="grid grid-cols-4 gap-4 max-w-5xl mx-auto">
           {bases.map(first => (
             <div key={first} className="space-y-4">

@@ -8,7 +8,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   
   const [mode, setMode] = useState('login'); // 'login', 'register', 'reset'
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // <--- WE USE THIS ONE STATE FOR ALL LOADING
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -46,14 +46,18 @@ export default function LoginPage() {
   };
 
   const handleGuestLogin = async () => {
-      setLoading(true);
       try {
-          await loginAsGuest();
-          navigate('/');
+          setError(null);
+          setLoading(true); // <--- FIXED: Changed from setIsLoggingIn to setLoading
+          
+          // Force the tour to show by clearing previous session memory
+          sessionStorage.removeItem('guestWelcomeSeen'); 
+          
+          await loginAsGuest(); 
       } catch (err) {
-          setError("Guest login failed. Please try again.");
+          setError(err.message);
       } finally {
-          setLoading(false);
+          setLoading(false); // <--- FIXED: Changed from setIsLoggingIn to setLoading
       }
   };
 

@@ -8,11 +8,11 @@ export default function PubmedSearch() {
   const [searched, setSearched] = useState(false);
 
   const searchPubmed = async () => {
+    // ... (Keep existing logic) ...
     if (!query) return;
     setLoading(true);
     setSearched(true);
     try {
-      // 1. Get IDs
       const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${query}&retmode=json&retmax=5`;
       const searchRes = await fetch(searchUrl).then(res => res.json());
       const ids = searchRes.esearchresult.idlist;
@@ -23,7 +23,6 @@ export default function PubmedSearch() {
         return;
       }
 
-      // 2. Get Summaries
       const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${ids.join(',')}&retmode=json`;
       const summaryRes = await fetch(summaryUrl).then(res => res.json());
       
@@ -39,15 +38,15 @@ export default function PubmedSearch() {
   return (
     <div className="space-y-8 animate-fadeIn max-w-4xl mx-auto">
       {/* Header */}
-      <div className="text-center space-y-4 py-8">
+      <div id="pubmed-header" className="text-center space-y-4 py-8">
         <h2 className="text-3xl font-bold text-txt-primary flex items-center justify-center gap-2">
           <BookOpen className="text-brand" size={32} /> PubMed Literature Search
         </h2>
         <p className="text-txt-secondary">Access 36 million citations for biomedical literature from MEDLINE, life science journals, and online books.</p>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex gap-2 max-w-2xl mx-auto">
+      {/* Search Bar ID */}
+      <div id="pubmed-search-area" className="flex gap-2 max-w-2xl mx-auto">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-txt-muted" size={20} />
           <input 
@@ -67,8 +66,8 @@ export default function PubmedSearch() {
         </button>
       </div>
 
-      {/* Results List */}
-      <div className="space-y-4">
+      {/* Results List ID */}
+      <div id="pubmed-results" className="space-y-4">
         {papers.map((paper, idx) => (
           <div key={idx} className="pro-panel bg-panel p-6 hover:border-brand/50 transition-all group">
             <h3 className="text-xl font-bold text-brand-light mb-2 group-hover:text-brand transition-colors cursor-pointer">

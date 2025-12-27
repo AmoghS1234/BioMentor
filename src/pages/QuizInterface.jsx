@@ -146,7 +146,8 @@ export default function QuizInterface() {
     return (
       <div className="space-y-8 animate-fadeIn max-w-5xl mx-auto">
         
-        <div className="flex justify-between items-end border-b border-border pb-6">
+        {/* HEADER ID */}
+        <div id="quiz-header" className="flex justify-between items-end border-b border-border pb-6">
           <div>
             <h2 className="text-3xl font-bold text-txt-primary flex items-center gap-2">
               <BrainCircuit className="text-brand" /> Assessment Center
@@ -155,8 +156,8 @@ export default function QuizInterface() {
           </div>
         </div>
 
-        {/* AI Generator */}
-        <div className="pro-panel p-6 bg-input/10 border-dashed border-2 border-border flex flex-col md:flex-row gap-4 items-center justify-between">
+        {/* AI GENERATOR ID */}
+        <div id="quiz-ai-generator" className="pro-panel p-6 bg-input/10 border-dashed border-2 border-border flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-brand/10 rounded-full">
               <Sparkles className="text-brand" size={24}/>
@@ -185,8 +186,8 @@ export default function QuizInterface() {
           </div>
         </div>
 
-        {/* Quiz Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* QUIZ GRID ID */}
+        <div id="quiz-topic-grid" className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.keys(quizData).map(cat => (
             <div 
               key={cat}
@@ -252,7 +253,8 @@ export default function QuizInterface() {
   const q = quizData[category][currentQ];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn">
+    // ACTIVE QUIZ CONTAINER ID
+    <div id="quiz-active-container" className="max-w-2xl mx-auto space-y-6 animate-fadeIn">
       
       {/* Header */}
       <div className="flex justify-between items-center text-xs font-bold text-txt-muted uppercase tracking-wider border-b border-border pb-4">

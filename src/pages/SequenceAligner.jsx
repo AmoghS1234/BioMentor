@@ -10,6 +10,7 @@ export default function SequenceAligner() {
   const [result, setResult] = useState(null);
 
   const runAlignment = () => {
+    // ... (Keep your existing logic exactly the same) ...
     const s1 = seq1.toUpperCase();
     const s2 = seq2.toUpperCase();
     const n = s1.length;
@@ -73,7 +74,8 @@ export default function SequenceAligner() {
 
   return (
     <div className="space-y-6 animate-fadeIn font-sans">
-      <div className="flex justify-between items-end border-b border-border pb-4">
+      {/* HEADER ID */}
+      <div id="aligner-header" className="flex justify-between items-end border-b border-border pb-4">
         <div>
           <h2 className="text-2xl font-bold text-txt-primary flex items-center gap-2">
             <GitMerge size={24} className="text-brand" /> Global Alignment
@@ -93,7 +95,8 @@ export default function SequenceAligner() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="space-y-4 lg:col-span-1">
-          <div className="pro-panel p-4 space-y-4 bg-panel">
+          {/* INPUTS ID */}
+          <div id="aligner-inputs" className="pro-panel p-4 space-y-4 bg-panel">
             <div>
               <label className="text-xs font-bold text-txt-muted uppercase tracking-wider">Sequence A (5'→3')</label>
               <textarea value={seq1} onChange={(e) => setSeq1(e.target.value.toUpperCase())} className="pro-input font-mono text-sm h-32 mt-2 resize-none uppercase" placeholder="Enter sequence..." />
@@ -102,7 +105,8 @@ export default function SequenceAligner() {
               <label className="text-xs font-bold text-txt-muted uppercase tracking-wider">Sequence B (5'→3')</label>
               <textarea value={seq2} onChange={(e) => setSeq2(e.target.value.toUpperCase())} className="pro-input font-mono text-sm h-32 mt-2 resize-none uppercase" placeholder="Enter sequence..." />
             </div>
-            <button onClick={runAlignment} className="pro-btn w-full flex justify-center items-center gap-2 py-3">
+            {/* BUTTON ID */}
+            <button id="aligner-run-btn" onClick={runAlignment} className="pro-btn w-full flex justify-center items-center gap-2 py-3">
               <Play size={16} /> Run Alignment
             </button>
           </div>
@@ -110,7 +114,8 @@ export default function SequenceAligner() {
 
         <div className="lg:col-span-2">
           {result ? (
-            <div className="pro-panel h-full flex flex-col">
+            // RESULTS ID
+            <div id="aligner-results" className="pro-panel h-full flex flex-col">
               <div className="bg-input/30 p-4 border-b border-border flex justify-between items-center">
                 <span className="text-xs font-bold text-txt-muted uppercase">Alignment Result</span>
                 <div className="flex gap-4 text-sm font-mono">
@@ -130,7 +135,7 @@ export default function SequenceAligner() {
               </div>
             </div>
           ) : (
-            <div className="pro-panel h-full flex flex-col items-center justify-center text-txt-muted p-12 border-dashed border-2 border-border">
+            <div id="aligner-results" className="pro-panel h-full flex flex-col items-center justify-center text-txt-muted p-12 border-dashed border-2 border-border">
               <AlignCenter size={48} className="mb-4 opacity-20" />
               <p>Enter sequences and execute alignment to visualize homologies.</p>
             </div>

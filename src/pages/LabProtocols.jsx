@@ -32,9 +32,9 @@ export default function LabProtocols() {
   useEffect(() => {
     const loadProtocols = async () => {
       try {
-        const result = await window.storage.get('custom-protocols');
-        if (result?.value) {
-          const customProtocols = JSON.parse(result.value);
+        const result = localStorage.getItem('custom-protocols');
+        if (result) {
+          const customProtocols = JSON.parse(result);
           setProtocols({ ...defaultProtocols, ...customProtocols });
         }
       } catch (error) {
@@ -53,7 +53,7 @@ export default function LabProtocols() {
       }
     });
     try {
-      await window.storage.set('custom-protocols', JSON.stringify(customOnly));
+      localStorage.setItem('custom-protocols', JSON.stringify(customOnly));
     } catch (error) {
       console.error('Error saving protocols:', error);
     }
@@ -109,20 +109,22 @@ export default function LabProtocols() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="flex justify-between items-center border-b border-border pb-4">
+      {/* HEADER ID */}
+      <div id="protocols-header" className="flex justify-between items-center border-b border-border pb-4">
         <div>
           <h2 className="text-2xl font-bold text-txt-primary flex items-center gap-2">
             <ClipboardList className="text-brand" /> Lab Protocols
           </h2>
           <p className="text-sm text-txt-secondary mt-1">Standard operating procedures for wet-lab experiments.</p>
         </div>
-        <button onClick={() => setShowAddForm(!showAddForm)} className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors">
+        {/* ADD BUTTON ID */}
+        <button id="protocols-add-btn" onClick={() => setShowAddForm(!showAddForm)} className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors">
           <Plus size={20} /> Add Protocol
         </button>
       </div>
 
       {showAddForm && (
-        <div className="pro-panel bg-panel p-6 rounded-xl border-2 border-brand/30">
+        <div className="pro-panel bg-panel p-6 rounded-xl border-2 border-brand/30 animate-fadeIn">
           <h3 className="text-lg font-bold text-txt-primary mb-4">Create New Protocol</h3>
           
           <input 
@@ -168,7 +170,8 @@ export default function LabProtocols() {
       )}
 
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="pro-panel bg-panel p-4 rounded-xl space-y-2 h-fit">
+        {/* SIDEBAR ID */}
+        <div id="protocols-sidebar" className="pro-panel bg-panel p-4 rounded-xl space-y-2 h-fit">
           {Object.keys(protocols).map(p => (
             <div key={p} className="relative group">
               <button onClick={() => setActiveProto(p)} className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${activeProto === p ? 'bg-brand text-white' : 'text-txt-secondary hover:bg-page'}`}>
@@ -187,7 +190,8 @@ export default function LabProtocols() {
           ))}
         </div>
 
-        <div className="md:col-span-2 pro-panel bg-panel p-6 rounded-xl">
+        {/* CHECKLIST ID */}
+        <div id="protocols-checklist" className="md:col-span-2 pro-panel bg-panel p-6 rounded-xl">
           <h3 className="text-xl font-bold text-txt-primary mb-6 border-b border-border pb-4">{activeProto}</h3>
           <div className="space-y-4">
             {protocols[activeProto].map((step, idx) => (

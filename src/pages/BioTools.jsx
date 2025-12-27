@@ -8,11 +8,10 @@ export default function BioTools() {
   // OPTIMIZATION: Only clean sequence when input changes
   const cleanSeq = useMemo(() => seq.toUpperCase().replace(/[^ATCG]/g, ""), [seq]);
 
-  // OPTIMIZATION: Wrap heavy math in useMemo so it doesn't run on every render
+  // OPTIMIZATION: Wrap heavy math in useMemo
   const stats = useMemo(() => {
     if (!cleanSeq) return null;
     
-    // Performance: Single pass loop is faster than multiple regex matches for huge strings
     let a = 0, t = 0, c = 0, g = 0;
     for (let i = 0; i < cleanSeq.length; i++) {
       const char = cleanSeq[i];
@@ -62,7 +61,8 @@ export default function BioTools() {
 
   return (
     <div className="space-y-6 animate-fadeIn h-[calc(100vh-100px)] flex flex-col max-w-6xl mx-auto">
-      <div className="flex justify-between items-center border-b border-border pb-4">
+      {/* HEADER ID */}
+      <div id="tools-header" className="flex justify-between items-center border-b border-border pb-4">
         <div>
           <h2 className="text-2xl font-bold text-txt-primary flex items-center gap-2">
             <Calculator className="text-brand" /> Sequence Analysis Suite
@@ -72,7 +72,8 @@ export default function BioTools() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6 flex-1 min-h-0">
-        <div className="pro-panel p-4 flex flex-col h-full bg-panel border-r-0 lg:border-r border-border">
+        {/* INPUT ID */}
+        <div id="tools-input-area" className="pro-panel p-4 flex flex-col h-full bg-panel border-r-0 lg:border-r border-border">
           <label className="text-xs font-bold text-txt-muted uppercase tracking-wider mb-2">Raw FASTA / Sequence</label>
           <textarea 
             value={seq}
@@ -87,13 +88,15 @@ export default function BioTools() {
         </div>
 
         <div className="lg:col-span-2 pro-panel flex flex-col overflow-hidden bg-panel">
-          <div className="flex border-b border-border bg-input/20">
+          {/* TABS ID */}
+          <div id="tools-tabs" className="flex border-b border-border bg-input/20">
             <ToolTab id="stats" label="Overview" icon={<BarChart2 size={16}/>} active={activeTab} onClick={setActiveTab} />
             <ToolTab id="trans" label="Translation" icon={<FileCode size={16}/>} active={activeTab} onClick={setActiveTab} />
             <ToolTab id="tm" label="Melting Temp" icon={<Thermometer size={16}/>} active={activeTab} onClick={setActiveTab} />
           </div>
 
-          <div className="p-6 flex-1 overflow-y-auto bg-page/30">
+          {/* RESULTS ID */}
+          <div id="tools-results-area" className="p-6 flex-1 overflow-y-auto bg-page/30">
             {!stats ? (
               <div className="h-full flex flex-col items-center justify-center text-txt-muted opacity-50">
                 <Dna size={48} className="mb-4" />

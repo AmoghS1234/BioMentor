@@ -11,9 +11,19 @@ import {
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
-  sendPasswordResetEmail // NEW IMPORT
+  sendPasswordResetEmail
 } from 'firebase/auth';
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc } from 'firebase/firestore';
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  updateDoc, 
+  onSnapshot, 
+  getDoc,
+  collection,   // <--- Added
+  getDocs,      // <--- Added
+  deleteDoc     // <--- Added
+} from 'firebase/firestore';
 
 const FirebaseContext = createContext();
 
@@ -50,6 +60,7 @@ export const FirebaseProvider = ({ children }) => {
               createdAt: Date.now(),
               lastLogin: Date.now(),
               xp: 0,
+              hasSeenTour: false, // Ensure tour state is tracked
               aiModel: 'gemini-2.5-flash', 
               aiEndpoint: '/api/gemini'
           });
@@ -88,6 +99,7 @@ export const FirebaseProvider = ({ children }) => {
 
   const logout = async () => {
     try { 
+      sessionStorage.removeItem('guestWelcomeSeen'); // Reset guest tour flag on logout
       await firebaseSignOut(auth); 
       setProfile(null);
       setUser(null);
@@ -103,12 +115,50 @@ export const FirebaseProvider = ({ children }) => {
     }
   };
 
-  // NEW: Password Reset Function
   const resetPassword = async (email) => {
     try {
       await sendPasswordResetEmail(auth, email);
     } catch (error) {
       throw error;
+    }
+  };
+
+  // --- NEW: WIPE DATA FUNCTION ---
+  const clearAccountData = async () => {
+    if (!user || !db) return;
+
+    try {
+      // 1. Delete Flashcards Sub-collection
+      const cardsRef = collection(db, `users/${user.uid}/flashcards`);
+      const snapshot = await getDocs(cardsRef);
+      const deletePromises = snapshot.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(deletePromises);
+
+      // 2. Reset Main User Document (Wipe XP, Quizzes, Settings)
+      const userRef = doc(db, 'users', user.uid);
+      // We overwrite using setDoc to clear custom fields like customQuizzes
+      await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email || 'Anonymous',
+        displayName: user.displayName || 'Guest',
+        createdAt: Date.now(),
+        lastLogin: Date.now(),
+        xp: 0,
+        hasSeenTour: false, // Reset tour so they see it again
+        aiModel: 'gemini-2.5-flash',
+        aiEndpoint: '/api/gemini'
+      });
+
+      // 3. Clear Local Storage (Notes & Protocols)
+      localStorage.removeItem('bioNotes');
+      localStorage.removeItem('custom-protocols');
+      
+      // 4. Reload page to reflect empty state
+      window.location.reload();
+
+    } catch (err) {
+      console.error("Failed to clear data:", err);
+      throw new Error("Could not clear data. Please try again.");
     }
   };
 
@@ -143,7 +193,13 @@ export const FirebaseProvider = ({ children }) => {
 
   const value = {
     user, profile, isAuthReady, db, auth,
-    loginWithEmail, registerWithEmail, loginAsGuest, logout, updateProfileSetting, resetPassword
+    loginWithEmail, 
+    registerWithEmail, 
+    loginAsGuest, 
+    logout, 
+    updateProfileSetting, 
+    resetPassword,
+    clearAccountData // <--- Exported here
   };
 
   if (!app) return <div className="p-10 text-center text-red-500">Error: Firebase config missing.</div>;

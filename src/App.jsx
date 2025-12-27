@@ -1,10 +1,14 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useFirebase } from './hooks/useFirebase';
+import { useTour } from './context/TourContext'; // Import Tour Context
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'; // Firestore imports
 import { Loader } from 'lucide-react';
 
 // --- COMPONENTS ---
 import Sidebar from './components/Sidebar';
+import TourMenu from './components/TourMenu'; 
+import GuestWelcome from './components/GuestWelcome'; // <--- NEW IMPORT
 
 // --- PAGES ---
 import Home from './pages/Home';
@@ -23,72 +27,125 @@ import ProblemSolver from './pages/ProblemSolver';
 import BioNotes from './pages/BioNotes';
 import LoginPage from './pages/LoginPage';
 import UserProfile from './pages/UserProfile';
+import Settings from './pages/Settings';
 
 export default function App() {
-    const { user, isAuthReady } = useFirebase();
+    const { user, isAuthReady, db } = useFirebase();
+    const { startMainTour } = useTour();
+    
+    const [showGuestModal, setShowGuestModal] = useState(false);
+    const hasCheckedTour = useRef(false); // Prevents double-checking in strict mode
 
-    // 1. Loading State: Wait for Firebase to check cookies
+    // --- ONBOARDING LOGIC ---
+    useEffect(() => {
+        const checkOnboarding = async () => {
+            // Only run if user is logged in and we haven't checked yet
+            if (!user || !db || hasCheckedTour.current) return;
+            
+            hasCheckedTour.current = true;
+
+            // SCENARIO 1: GUEST USER
+            if (user.isAnonymous) {
+                // Check session storage so we don't annoy them on refresh
+                const sessionGuest = sessionStorage.getItem('guestWelcomeSeen');
+                if (!sessionGuest) {
+                    setShowGuestModal(true);
+                    sessionStorage.setItem('guestWelcomeSeen', 'true');
+                }
+                return;
+            }
+
+            // SCENARIO 2: REGISTERED USER
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    // If 'hasSeenTour' is missing or false, start the tour
+                    if (!data.hasSeenTour) {
+                        startMainTour(); // <--- AUTO START
+                        
+                        // Immediately mark as seen in DB
+                        await updateDoc(userRef, { hasSeenTour: true });
+                    }
+                } else {
+                    // Edge case: User doc doesn't exist yet (just created)
+                    startMainTour();
+                    await setDoc(userRef, { 
+                        email: user.email, 
+                        hasSeenTour: true,
+                        createdAt: new Date()
+                    }, { merge: true });
+                }
+            } catch (err) {
+                console.error("Error checking tour status:", err);
+            }
+        };
+
+        if (isAuthReady && user) {
+            checkOnboarding();
+        }
+    }, [user, isAuthReady, db, startMainTour]);
+
+
+    // 1. Loading State
     if (!isAuthReady) {
         return (
-            <div className="min-h-screen bg-page flex flex-col items-center justify-center text-txt-secondary">
-            <Loader className="animate-spin mb-4 text-brand" size={32} />
-            <p className="text-sm font-bold uppercase tracking-widest">Loading Workspace...</p>
+            <div className="min-h-screen bg-page flex flex-col items-center justify-center text-txt-secondary transition-colors duration-300">
+                <Loader className="animate-spin mb-4 text-brand" size={32} />
+                <p className="text-sm font-bold uppercase tracking-widest">Loading Workspace...</p>
             </div>
         );
     }
 
-    // 2. If NO user is logged in, force the Login Page
+    // 2. Not Logged In
     if (!user) {
         return (
-            <BrowserRouter>
             <Routes>
-            <Route path="*" element={<LoginPage />} />
+                <Route path="*" element={<LoginPage />} />
             </Routes>
-            </BrowserRouter>
         );
     }
 
-    // 3. If User IS logged in, show the Full App
+    // 3. Logged In
     return (
-        <BrowserRouter>
-        <div className="min-h-screen bg-page flex text-txt-primary font-sans selection:bg-brand/30 selection:text-white">
+        <div className="min-h-screen bg-page flex text-txt-primary font-sans selection:bg-brand/30 selection:text-white transition-colors duration-300">
+            
+            <TourMenu /> 
+            
+            {/* Show Guest Modal if state is true */}
+            {showGuestModal && <GuestWelcome onClose={() => setShowGuestModal(false)} />}
+            
+            <Sidebar />
 
-        {/* Navigation Sidebar */}
-        <Sidebar />
+            <main className="flex-1 md:ml-64 transition-all duration-300">
+                <div className="max-w-[1600px] mx-auto px-6 py-8 md:py-12 animate-fadeIn min-h-screen">
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/chat" element={<ChatInterface />} />
+                        <Route path="/notes" element={<BioNotes />} />
+                        <Route path="/profile" element={<UserProfile />} />
+                        <Route path="/settings" element={<Settings />} />
 
-        {/* Main Content Area */}
-        <main className="flex-1 md:ml-64 transition-all duration-300">
-        <div className="max-w-[1600px] mx-auto px-6 py-8 md:py-12 animate-fadeIn min-h-screen">
-        <Routes>
-        {/* Core */}
-        <Route path="/" element={<Home />} />
-        <Route path="/chat" element={<ChatInterface />} />
-        <Route path="/notes" element={<BioNotes />} />
-        <Route path="/profile" element={<UserProfile />} />
+                        <Route path="/tools" element={<BioTools />} />
+                        <Route path="/aligner" element={<SequenceAligner />} />
+                        <Route path="/pubmed" element={<PubmedSearch />} />
+                        <Route path="/viewer" element={<ProteinViewer />} />
 
-        {/* Tools */}
-        <Route path="/tools" element={<BioTools />} />
-        <Route path="/aligner" element={<SequenceAligner />} />
-        <Route path="/pubmed" element={<PubmedSearch />} />
-        <Route path="/viewer" element={<ProteinViewer />} />
+                        <Route path="/protocols" element={<LabProtocols />} />
+                        <Route path="/codon" element={<CodonTable />} />
+                        <Route path="/resources" element={<Resources />} />
 
-        {/* References */}
-        <Route path="/protocols" element={<LabProtocols />} />
-        <Route path="/codon" element={<CodonTable />} />
-        <Route path="/resources" element={<Resources />} />
+                        <Route path="/tutorials" element={<Tutorials />} />
+                        <Route path="/quiz" element={<QuizInterface />} />
+                        <Route path="/flashcards" element={<StudyDeck />} />
+                        <Route path="/problems" element={<ProblemSolver />} />
 
-        {/* Learning */}
-        <Route path="/tutorials" element={<Tutorials />} />
-        <Route path="/quiz" element={<QuizInterface />} />
-        <Route path="/flashcards" element={<StudyDeck />} />
-        <Route path="/problems" element={<ProblemSolver />} />
-
-        {/* Redirect unknown paths to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </div>
+            </main>
         </div>
-        </main>
-        </div>
-        </BrowserRouter>
     );
 }

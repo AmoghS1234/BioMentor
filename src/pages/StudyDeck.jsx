@@ -47,8 +47,6 @@ export default function StudyDeck() {
         createdAt: Date.now()
     }));
 
-    // Add each card to Firestore
-    // (For production, use a batch write, but simple loops work for small sets)
     for (const card of batch) {
         await addDoc(collection(db, `users/${user.uid}/flashcards`), card);
     }
@@ -106,7 +104,8 @@ export default function StudyDeck() {
     const progress = ((studyIndex + 1) / cards.length) * 100;
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn">
+      // STUDY CONTAINER ID
+      <div id="deck-study-mode" className="max-w-2xl mx-auto space-y-6 animate-fadeIn">
         <div className="flex justify-between items-center">
           <button onClick={() => setMode('overview')} className="text-txt-secondary hover:text-brand font-bold text-sm">← Back to Deck</button>
           <span className="text-txt-muted font-mono text-xs">Card {studyIndex + 1} of {cards.length}</span>
@@ -114,7 +113,9 @@ export default function StudyDeck() {
         <div className="w-full h-1 bg-panel rounded-full overflow-hidden">
           <div className="h-full bg-brand transition-all duration-300" style={{ width: `${progress}%` }}></div>
         </div>
-        <div onClick={() => setIsFlipped(!isFlipped)} className="relative h-80 w-full cursor-pointer perspective-1000 group">
+        
+        {/* CARD ID */}
+        <div id="deck-study-card" onClick={() => setIsFlipped(!isFlipped)} className="relative h-80 w-full cursor-pointer perspective-1000 group">
           <div className={`relative w-full h-full duration-500 transform-style-3d transition-all ${isFlipped ? 'rotate-y-180' : ''}`}>
             <div className="absolute w-full h-full pro-panel bg-panel p-8 flex flex-col items-center justify-center backface-hidden shadow-xl border border-border">
               <span className="text-xs font-bold text-brand uppercase tracking-widest mb-4">Term / Question</span>
@@ -127,7 +128,9 @@ export default function StudyDeck() {
             </div>
           </div>
         </div>
-        <div className="flex justify-center gap-4 pt-4">
+
+        {/* CONTROLS ID */}
+        <div id="deck-study-controls" className="flex justify-center gap-4 pt-4">
           <button onClick={() => { if (studyIndex > 0) { setStudyIndex(i => i - 1); setIsFlipped(false); } }} disabled={studyIndex === 0} className="pro-btn bg-panel hover:bg-border text-txt-primary border border-border disabled:opacity-50">Previous</button>
           <button onClick={() => { if (studyIndex < cards.length - 1) { setStudyIndex(i => i + 1); setIsFlipped(false); } else { alert("Deck Complete!"); setMode('overview'); setStudyIndex(0); setIsFlipped(false); } }} className="pro-btn">{studyIndex === cards.length - 1 ? 'Finish' : 'Next Card'}</button>
         </div>
@@ -138,19 +141,22 @@ export default function StudyDeck() {
   // --- OVERVIEW MODE ---
   return (
     <div className="space-y-8 animate-fadeIn">
-      <div className="flex justify-between items-end border-b border-border pb-6">
+      {/* HEADER ID */}
+      <div id="deck-header" className="flex justify-between items-end border-b border-border pb-6">
         <div>
           <h2 className="text-3xl font-bold text-txt-primary flex items-center gap-2"><Layers className="text-brand" /> Study Deck</h2>
           <p className="text-txt-secondary mt-1">Manage your flashcards and test your memory.</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => setShowGenModal(true)} className="pro-btn bg-purple-600 hover:bg-purple-700 flex items-center gap-2"><Sparkles size={18} /> AI Generate</button>
-          <button onClick={() => setMode('study')} disabled={cards.length === 0} className="pro-btn flex items-center gap-2"><Play size={18} /> Start Session</button>
+          {/* BUTTON IDs */}
+          <button id="deck-ai-btn" onClick={() => setShowGenModal(true)} className="pro-btn bg-purple-600 hover:bg-purple-700 flex items-center gap-2"><Sparkles size={18} /> AI Generate</button>
+          <button id="deck-start-btn" onClick={() => setMode('study')} disabled={cards.length === 0} className="pro-btn flex items-center gap-2"><Play size={18} /> Start Session</button>
         </div>
       </div>
 
       {showGenModal && (
-        <div className="pro-panel p-6 bg-brand/10 border-brand/20 animate-fadeIn">
+        // GENERATOR ID
+        <div id="deck-generator-modal" className="pro-panel p-6 bg-brand/10 border-brand/20 animate-fadeIn">
           <h3 className="font-bold text-txt-primary mb-2 flex items-center gap-2"><Sparkles size={16} className="text-brand"/> Generate Flashcards with AI</h3>
           <div className="flex gap-2">
             <input value={genTopic} onChange={(e) => setGenTopic(e.target.value)} placeholder="Enter topic (e.g. 'Krebs Cycle')..." className="pro-input bg-page" onKeyPress={(e) => e.key === 'Enter' && handleAiGenerate()} />
@@ -160,7 +166,8 @@ export default function StudyDeck() {
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* GRID ID */}
+      <div id="deck-grid" className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map((card) => (
           <div key={card.id} className="pro-panel p-6 bg-panel group hover:border-brand/50 transition-all relative h-40 flex flex-col justify-between">
             <div className="flex justify-between items-start">
