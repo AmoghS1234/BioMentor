@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as $3Dmol from '3dmol/build/3Dmol.js';
-import { Dna, Search, RefreshCw, Box, Layers } from 'lucide-react';
+import { Dna, Search, RefreshCw, Box, Layers, ZoomIn, ZoomOut } from 'lucide-react';
 
 export default function ProteinViewer() {
   const [pdbId, setPdbId] = useState('1CRN');
@@ -65,6 +65,20 @@ export default function ProteinViewer() {
     if (viewer) fetchPDB(pdbId, viewer);
   };
 
+  const handleZoomIn = () => {
+    if (viewer) {
+      viewer.zoom(1.2); // Zoom in by 20%
+      viewer.render();
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (viewer) {
+      viewer.zoom(0.8); // Zoom out by 20%
+      viewer.render();
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn h-[calc(100vh-100px)] flex flex-col">
       {/* Controls Header */}
@@ -103,8 +117,28 @@ export default function ProteinViewer() {
         {/* Viewer Canvas */}
         <div className="lg:col-span-3 pro-panel bg-black overflow-hidden relative border-border/50">
           <div id="gldiv" className="w-full h-full cursor-move"></div>
+          
+          {/* Controls Overlay - Bottom Left */}
           <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur px-3 py-2 rounded text-xs text-txt-secondary">
             Left Click: Rotate • Middle: Zoom • Right: Translate
+          </div>
+
+          {/* Zoom Controls - Bottom Right */}
+          <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+            <button
+              onClick={handleZoomIn}
+              className="bg-black/60 backdrop-blur hover:bg-black/80 text-white p-2 rounded-lg transition-all border border-border/30 hover:border-brand/50"
+              title="Zoom In"
+            >
+              <ZoomIn size={20} />
+            </button>
+            <button
+              onClick={handleZoomOut}
+              className="bg-black/60 backdrop-blur hover:bg-black/80 text-white p-2 rounded-lg transition-all border border-border/30 hover:border-brand/50"
+              title="Zoom Out"
+            >
+              <ZoomOut size={20} />
+            </button>
           </div>
         </div>
 

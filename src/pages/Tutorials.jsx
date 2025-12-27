@@ -1,11 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, ChevronRight, CheckCircle, Sparkles, Loader, PlayCircle, FileText, Image as ImageIcon } from 'lucide-react';
+import { BookOpen, ChevronRight, CheckCircle, Sparkles, Loader, PlayCircle, ArrowRight, GitBranch, RotateCcw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAiGenerator } from '../hooks/useAiGenerator';
 import { useFirebase } from '../hooks/useFirebase';
 import { doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { STATIC_TUTORIALS } from '../data/staticTutorials';
+
+// Flowchart Component
+const FlowchartBlock = ({ content }) => {
+  const parseFlowchart = (text) => {
+    // Split by arrows and pipes
+    const parts = text.split(/(\||→|->)/).map(s => s.trim()).filter(Boolean);
+    return parts;
+  };
+
+  const elements = parseFlowchart(content);
+  
+  return (
+    <div className="my-8 p-6 bg-gradient-to-br from-brand/5 to-purple-500/5 border border-brand/20 rounded-xl">
+      <div className="flex items-center gap-2 mb-4">
+        <GitBranch size={16} className="text-brand" />
+        <span className="text-xs font-bold text-txt-muted uppercase tracking-wider">Workflow</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        {elements.map((element, idx) => {
+          if (element === '→' || element === '->') {
+            return (
+              <ArrowRight key={idx} size={20} className="text-brand/60 flex-shrink-0" />
+            );
+          } else if (element === '|') {
+            return (
+              <div key={idx} className="h-12 w-px bg-border flex-shrink-0"></div>
+            );
+          } else {
+            return (
+              <div 
+                key={idx}
+                className="px-4 py-2 bg-panel border border-border rounded-lg text-txt-primary text-sm font-medium hover:border-brand/50 hover:bg-brand/5 transition-all"
+              >
+                {element}
+              </div>
+            );
+          }
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default function Tutorials() {
   const { generateContent, isGenerating } = useAiGenerator();
@@ -16,7 +58,6 @@ export default function Tutorials() {
   const [genTopic, setGenTopic] = useState('');
   const [completed, setCompleted] = useState([]);
 
-  // 1. Load User's Custom Tutorials & Progress
   useEffect(() => {
     const loadUserData = async () => {
       if (!user) return;
@@ -25,7 +66,6 @@ export default function Tutorials() {
       
       if (snap.exists()) {
         const data = snap.data();
-        // Merge Static (Hardcoded) + Custom (Firestore)
         if (data.customTutorials) {
             setModules([...STATIC_TUTORIALS, ...data.customTutorials]);
         }
@@ -40,18 +80,15 @@ export default function Tutorials() {
   const handleGenerate = async () => {
     if (!genTopic.trim()) return;
     
-    // 1. Generate
     const newAIModules = await generateContent(genTopic, 'tutorial');
     
     if (newAIModules && newAIModules.length > 0) {
       const mod = { ...newAIModules[0], id: `AI-${Date.now()}`, type: 'AI Generated' };
       
-      // 2. Update Local State
       setModules(prev => [...prev, mod]);
       setActiveModule(mod);
       setGenTopic('');
 
-      // 3. Save to Cloud
       if (user) {
           await setDoc(doc(db, 'users', user.uid), {
               customTutorials: arrayUnion(mod)
@@ -67,7 +104,22 @@ export default function Tutorials() {
           if (user) {
               await updateDoc(doc(db, 'users', user.uid), {
                   completedModules: newCompleted,
-                  xp: (await getDoc(doc(db, 'users', user.uid))).data().xp + 100 // Bonus XP!
+                  xp: (await getDoc(doc(db, 'users', user.uid))).data().xp + 100
+              });
+          }
+      }
+  };
+
+  const resetComplete = async () => {
+      if (completed.includes(activeModule.id)) {
+          const newCompleted = completed.filter(id => id !== activeModule.id);
+          setCompleted(newCompleted);
+          if (user) {
+              const userDoc = await getDoc(doc(db, 'users', user.uid));
+              const currentXP = userDoc.data().xp || 0;
+              await updateDoc(doc(db, 'users', user.uid), {
+                  completedModules: newCompleted,
+                  xp: Math.max(0, currentXP - 100)
               });
           }
       }
@@ -76,14 +128,13 @@ export default function Tutorials() {
   return (
     <div className="h-[calc(100vh-140px)] flex gap-6 animate-fadeIn">
       
-      {/* SIDEBAR: Curriculum */}
+      {/* SIDEBAR */}
       <div className="w-80 flex flex-col pro-panel bg-panel overflow-hidden h-full border-r-0 shadow-xl">
         <div className="p-4 border-b border-border bg-input/10">
           <h2 className="font-bold text-txt-primary flex items-center gap-2 mb-4">
             <BookOpen size={18} className="text-brand" /> Learning Path
           </h2>
           
-          {/* Generator Input */}
           <div className="flex gap-2">
             <input 
               value={genTopic}
@@ -132,11 +183,10 @@ export default function Tutorials() {
         </div>
       </div>
 
-      {/* MAIN: Reader Panel */}
+      {/* MAIN PANEL */}
       <div className="flex-1 pro-panel bg-page overflow-y-auto border border-border relative shadow-none custom-scrollbar">
         <div className="max-w-4xl mx-auto p-10">
           
-          {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-xs text-txt-muted font-mono mb-6 uppercase tracking-widest">
             <span>Tutorials</span> 
             <ChevronRight size={12}/> 
@@ -145,56 +195,114 @@ export default function Tutorials() {
             <span>{activeModule.id}</span>
           </div>
           
-          {/* Title */}
           <h1 className="text-4xl font-bold text-txt-primary mb-8 leading-tight border-b border-border pb-6">
             {activeModule.title}
           </h1>
           
-          {/* Content Rendering */}
           <div className="prose prose-invert prose-lg max-w-none text-txt-secondary leading-relaxed">
             <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
                 components={{
-                    // Custom Image Renderer for Screenshots
-                    img: ({node, ...props}) => (
-                        <div className="my-8 border border-border rounded-xl overflow-hidden bg-black shadow-lg">
-                            <div className="bg-input/50 px-4 py-2 border-b border-border flex items-center gap-2 text-xs text-txt-muted">
-                                <ImageIcon size={14} /> Figure
-                            </div>
-                            <img {...props} className="w-full h-auto opacity-90 hover:opacity-100 transition-opacity" />
+                    code: ({inline, className, children}) => {
+                        const match = /language-(\w+)/.exec(className || '');
+                        const language = match ? match[1] : '';
+                        
+                        // Check if it's a flowchart code block
+                        if (!inline && language === 'flowchart') {
+                            return <FlowchartBlock content={String(children)} />;
+                        }
+                        
+                        // Regular inline code
+                        if (inline) {
+                            return (
+                                <code className="bg-input text-brand-light px-1.5 py-0.5 rounded text-sm font-mono">
+                                    {children}
+                                </code>
+                            );
+                        }
+                        
+                        // Regular code block
+                        return (
+                            <code className={className}>{children}</code>
+                        );
+                    },
+                    h2: ({children}) => (
+                        <h2 className="text-2xl font-bold text-txt-primary mt-12 mb-4 flex items-center gap-2">
+                            <span className="w-2 h-8 bg-brand rounded-full inline-block"></span>
+                            {children}
+                        </h2>
+                    ),
+                    h3: ({children}) => (
+                        <h3 className="text-xl font-bold text-txt-primary mt-8 mb-3">{children}</h3>
+                    ),
+                    pre: ({children}) => (
+                        <pre className="bg-[#0d1117] p-4 rounded-lg border border-border overflow-x-auto my-4 text-sm">
+                            {children}
+                        </pre>
+                    ),
+                    table: ({children}) => (
+                        <div className="overflow-x-auto my-6 rounded-lg border border-border">
+                            <table className="w-full text-sm text-left bg-panel">{children}</table>
                         </div>
                     ),
-                    h2: ({children}) => <h2 className="text-2xl font-bold text-txt-primary mt-12 mb-4 flex items-center gap-2"><span className="w-2 h-8 bg-brand rounded-full inline-block"></span>{children}</h2>,
-                    h3: ({children}) => <h3 className="text-xl font-bold text-txt-primary mt-8 mb-3">{children}</h3>,
-                    code: ({children}) => <code className="bg-input text-brand-light px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>,
-                    pre: ({children}) => <pre className="bg-[#0d1117] p-4 rounded-lg border border-border overflow-x-auto my-4 text-sm">{children}</pre>,
-                    table: ({children}) => <div className="overflow-x-auto my-6 rounded-lg border border-border"><table className="w-full text-sm text-left bg-panel">{children}</table></div>,
-                    thead: ({children}) => <thead className="bg-input text-txt-primary uppercase font-bold text-xs">{children}</thead>,
-                    th: ({children}) => <th className="px-4 py-3 border-b border-border whitespace-nowrap">{children}</th>,
-                    td: ({children}) => <td className="px-4 py-3 border-b border-border/50">{children}</td>,
+                    thead: ({children}) => (
+                        <thead className="bg-input text-txt-primary uppercase font-bold text-xs">
+                            {children}
+                        </thead>
+                    ),
+                    th: ({children}) => (
+                        <th className="px-4 py-3 border-b border-border whitespace-nowrap">{children}</th>
+                    ),
+                    td: ({children}) => (
+                        <td className="px-4 py-3 border-b border-border/50">{children}</td>
+                    ),
+                    a: ({href, children}) => (
+                        <a 
+                            href={href} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-brand hover:text-brand-hover underline decoration-brand/30 hover:decoration-brand transition-colors"
+                        >
+                            {children}
+                        </a>
+                    ),
+                    blockquote: ({children}) => (
+                        <blockquote className="border-l-4 border-brand pl-4 py-2 my-4 italic text-txt-muted bg-input/30 rounded-r-lg">
+                            {children}
+                        </blockquote>
+                    ),
                 }}
             >
                 {activeModule.content}
             </ReactMarkdown>
           </div>
 
-          {/* Footer Action */}
           <div className="mt-16 pt-8 border-t border-border flex justify-between items-center bg-panel/30 p-6 rounded-xl">
             <div>
                 <p className="text-txt-primary font-bold">Finished reading?</p>
                 <p className="text-sm text-txt-muted">Mark as complete to earn XP.</p>
             </div>
-            <button 
-                onClick={markComplete}
-                disabled={completed.includes(activeModule.id)}
-                className={`pro-btn flex items-center gap-2 px-8 py-3 ${completed.includes(activeModule.id) ? 'bg-green-600 hover:bg-green-700' : ''}`}
-            >
-              {completed.includes(activeModule.id) ? (
-                  <><CheckCircle size={18} /> Completed</>
-              ) : (
-                  <>Mark Complete <ChevronRight size={18} /></>
+            <div className="flex items-center gap-3">
+              {completed.includes(activeModule.id) && (
+                <button 
+                    onClick={resetComplete}
+                    className="flex items-center gap-2 px-6 py-3 bg-input hover:bg-input/80 text-txt-secondary hover:text-txt-primary border border-border rounded-lg transition-all font-medium"
+                >
+                  <RotateCcw size={18} /> Reset
+                </button>
               )}
-            </button>
+              <button 
+                  onClick={markComplete}
+                  disabled={completed.includes(activeModule.id)}
+                  className={`pro-btn flex items-center gap-2 px-8 py-3 ${completed.includes(activeModule.id) ? 'bg-green-600 hover:bg-green-700' : ''}`}
+              >
+                {completed.includes(activeModule.id) ? (
+                    <><CheckCircle size={18} /> Completed</>
+                ) : (
+                    <>Mark Complete <ChevronRight size={18} /></>
+                )}
+              </button>
+            </div>
           </div>
 
         </div>

@@ -26,6 +26,10 @@ Before you paste a sequence, you must choose the correct "Flavor" of BLAST.
 
 ## 2. Step-by-Step Workflow
 
+\`\`\`flowchart
+START → Input Sequence → Choose Algorithm → Select Database → Run BLAST → Interpret Results → END
+\`\`\`
+
 ### Step A: Input
 Navigate to [blast.ncbi.nlm.nih.gov](https://blast.ncbi.nlm.nih.gov). Paste your sequence in FASTA format:
 
@@ -39,13 +43,19 @@ ATGCGTACCGGT...
 * **RefSeq:** curated, non-redundant sequences. Use for high-quality reference data.
 * **Model Organisms:** Select "Human" or "Mouse" to limit search scope if you know the species.
 
-![BLAST Input Form](https://placehold.co/800x400/1e293b/ffffff?text=Screenshot:+BLAST+Database+Selection)
+\`\`\`flowchart
+Database Choice → nr/nt (General) | RefSeq (Curated) | Organism-Specific → BLAST Search
+\`\`\`
 
 ---
 
 ## 3. Interpreting Results (Critical)
 
 The output table contains statistical metrics. Understanding them is key to avoiding false positives.
+
+\`\`\`flowchart
+BLAST Results → Check E-Value → Check Query Cover → Check Identity % → Validate Hit → Conclusion
+\`\`\`
 
 1.  **Max Score (Bit Score):**
     * Higher is better.
@@ -61,8 +71,6 @@ The output table contains statistical metrics. Understanding them is key to avoi
 4.  **Per. Ident (Percent Identity):**
     * **> 95%**: Same species or very recent divergence.
     * **30-40%**: Distant homolog (might still share structure/function).
-
-![BLAST Hit Table](https://placehold.co/800x400/1e293b/ffffff?text=Screenshot:+Interpreting+E-Values+and+Scores)
 `
   },
   {
@@ -81,6 +89,10 @@ UniProt is the central hub for protein functional information. If BLAST tells yo
 
 UniProt is divided into two sections. Knowing the difference saves time.
 
+\`\`\`flowchart
+UniProt → Swiss-Prot (Manually Curated ⭐) | TrEMBL (Automated Annotation)
+\`\`\`
+
 * **Swiss-Prot (Reviewed):** Manually annotated by real scientists. High quality, experimental evidence. **Always prefer this.** (Gold Star icon).
 * **TrEMBL (Unreviewed):** Automatically annotated by computer algorithms. Massive coverage, but lower confidence.
 
@@ -89,6 +101,10 @@ UniProt is divided into two sections. Knowing the difference saves time.
 ## 2. Anatomy of a UniProt Entry
 
 When you open a protein page (e.g., Hemoglobin Subunit Alpha - P69905), look for these key sections:
+
+\`\`\`flowchart
+UniProt Entry → Function | Subcellular Location | Pathology | Sequence | Structure → Analysis
+\`\`\`
 
 ### **Function Section**
 Describes the biological role.
@@ -99,8 +115,6 @@ Where does the protein live?
 * *Cytoplasm*
 * *Cell Membrane* (Is it a receptor?)
 * *Nucleus* (Is it a transcription factor?)
-
-![UniProt Location Topology](https://placehold.co/800x400/1e293b/ffffff?text=Screenshot:+Subcellular+Location+Graphic)
 
 ### **Pathology & Biotech**
 * **Diseases:** Lists mutations associated with genetic disorders (e.g., Sickle Cell Anemia).
@@ -130,6 +144,10 @@ You can filter searches precisely. Try typing these into the search bar:
 
 ## 1. Why do we align?
 
+\`\`\`flowchart
+MSA Purpose → Phylogeny (Evolution Trees) | Conservation (Critical Residues) | Motif Discovery
+\`\`\`
+
 * **Phylogeny:** To build evolutionary trees.
 * **Conservation:** If an amino acid stays the same across Human, Mouse, Fish, and Yeast, it is likely **essential** for the protein's function (active site).
 * **Motif Finding:** To discover signature patterns.
@@ -138,11 +156,13 @@ You can filter searches precisely. Try typing these into the search bar:
 
 ## 2. Running an Alignment
 
+\`\`\`flowchart
+Collect Sequences → Paste into Clustal Omega → Choose Output Format → Run Alignment → View Results
+\`\`\`
+
 1.  **Collect Sequences:** Get FASTA sequences for the same protein from 5+ different species.
 2.  **Input:** Paste them all into one box at [ebi.ac.uk/Tools/msa/clustalo/](https://www.ebi.ac.uk/Tools/msa/clustalo/).
 3.  **Output Format:** Choose **"Clustal w/ numbers"** for readability.
-
-![Clustal Input](https://placehold.co/800x400/1e293b/ffffff?text=Screenshot:+Clustal+Omega+Input+Form)
 
 ---
 
@@ -155,6 +175,10 @@ SeqA    MKTLLILAVVAAL
 SeqB    MKTLLILAVVAAL
 SeqC    MKTLLILAVV---
         **********
+\`\`\`
+
+\`\`\`flowchart
+Alignment Symbols → (*) Perfect Conservation | (:) Strong Similarity | (.) Weak Similarity | (-) Gap
 \`\`\`
 
 * **(*) Asterisk:** Perfectly conserved (Identity). The residue is identical in all sequences.
@@ -179,6 +203,11 @@ Proteins are 3D machines. PyMOL is the industry-standard software for rendering 
 ---
 
 ## 1. Loading a Structure
+
+\`\`\`flowchart
+Load Structure → fetch 1crn (Command Line) | File > Open (Menu) → Structure Loaded
+\`\`\`
+
 You can load files directly from the RCSB Protein Data Bank.
 
 * **Command Line:** Type \`fetch 1crn\` in the top bar.
@@ -190,11 +219,13 @@ You can load files directly from the RCSB Protein Data Bank.
 
 Proteins can be shown in different ways to highlight different features:
 
+\`\`\`flowchart
+Visualization → Lines/Sticks (Detailed Bonds) | Cartoon/Ribbon (Secondary Structure) | Surface (Binding Pockets)
+\`\`\`
+
 * **Lines/Sticks:** Shows every atom and bond. Good for seeing detailed chemistry of side chains.
 * **Cartoon/Ribbon:** Smooth tubes following the backbone. Best for seeing Secondary Structure (Alpha Helices and Beta Sheets).
 * **Surface:** Shows the outer shell. Useful for visualizing binding pockets and "lock and key" mechanisms.
-
-![PyMOL Representations](https://placehold.co/800x400/1e293b/ffffff?text=Screenshot:+Comparing+Cartoon+vs+Surface+View)
 
 ---
 
@@ -213,6 +244,10 @@ PyMOL is powerful when you use the command line (bottom of screen).
 ---
 
 ## 4. Analyzing Interactions
+
+\`\`\`flowchart
+Load Complex → Select Ligand → Find Polar Contacts → View Hydrogen Bonds → Understand Binding
+\`\`\`
 
 To see how a drug binds to a protein:
 1.  Load a complex (e.g., \`fetch 1hsg\`).
@@ -235,6 +270,10 @@ While BLAST looks at single genes, the Genome Browser lets you scroll through en
 
 ## 1. The "Tracks" Concept
 
+\`\`\`flowchart
+UCSC Browser → Base Position | GENCODE Genes | Conservation | dbSNP → Visual Tracks
+\`\`\`
+
 Data is stacked in horizontal rows called "Tracks". You can turn them on/off below the main viewer.
 
 * **Base Position:** The literal A, T, C, G letters (zoom in to see).
@@ -242,11 +281,13 @@ Data is stacked in horizontal rows called "Tracks". You can turn them on/off bel
 * **Conservation:** A graph showing how similar this region is across 100 vertebrates (High peaks = Important functional DNA).
 * **dbSNP:** Known genetic variations (SNPs) in the human population.
 
-![UCSC Browser Interface](https://placehold.co/800x400/1e293b/ffffff?text=Screenshot:+UCSC+Genome+Browser+Tracks)
-
 ---
 
 ## 2. Navigation Basics
+
+\`\`\`flowchart
+Navigate → Search Gene/Coordinate | Zoom (1.5x, 3x, 10x) | Scroll (Drag) → Explore Genome
+\`\`\`
 
 * **Search:** Type a gene name (e.g., "BRCA1") or coordinate ("chr17:43,044,295-43,125,483").
 * **Zoom:** Use the "1.5x", "3x", "10x" buttons to zoom in/out.
@@ -255,6 +296,10 @@ Data is stacked in horizontal rows called "Tracks". You can turn them on/off bel
 ---
 
 ## 3. BLAT (BLAST-Like Alignment Tool)
+
+\`\`\`flowchart
+BLAT Tool → Paste Sequence → Submit → Get Location → Jump to Browser → View Context
+\`\`\`
 
 UCSC has its own alignment tool called BLAT.
 * **Faster** than BLAST for mapping exact matches to the genome.
