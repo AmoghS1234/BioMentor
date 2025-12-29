@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useFirebase } from '../hooks/useFirebase';
 import { 
   Star, Send, MessageSquare, ThumbsUp, Wrench, ShieldAlert, 
-  Loader, Trash2, TrendingUp, Users, Quote, User 
+  Loader, Trash2, TrendingUp, Users, Quote, User, Mail 
 } from 'lucide-react';
 import { collection, addDoc, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
@@ -13,7 +13,7 @@ export default function Feedback() {
   const { user, db } = useFirebase();
   
   // Form States
-  const [name, setName] = useState(''); // <--- New State for Name
+  const [name, setName] = useState(''); 
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [improvements, setImprovements] = useState('');
@@ -27,11 +27,12 @@ export default function Feedback() {
   const [loadingAdmin, setLoadingAdmin] = useState(false);
 
   useEffect(() => {
+    // Check if current user is Admin
     if (user?.email === ADMIN_EMAIL) {
       setIsAdmin(true);
       fetchFeedback();
     }
-    // Pre-fill name if registered user has one
+    // Auto-fill name if logged in
     if (user?.displayName) {
         setName(user.displayName);
     }
@@ -51,9 +52,8 @@ export default function Feedback() {
     }
   };
 
-  // Calculate Stats for Admin Dashboard
   const stats = useMemo(() => {
-    if (feedbackList.length === 0) return { avg: 0, total: 0, stars: 0 };
+    if (feedbackList.length === 0) return { avg: 0, total: 0 };
     const total = feedbackList.length;
     const sum = feedbackList.reduce((acc, curr) => acc + (curr.rating || 0), 0);
     const avg = (sum / total).toFixed(1);
@@ -69,7 +69,7 @@ export default function Feedback() {
       await addDoc(collection(db, 'feedback'), {
         userId: user?.uid || 'guest',
         userEmail: user?.email || 'Guest User',
-        userName: name.trim() || 'Anonymous', // <--- Logic to handle empty name
+        userName: name.trim() || 'Anonymous', // <--- Ensures Name is saved
         rating,
         improvements,
         bestPart,
@@ -78,7 +78,7 @@ export default function Feedback() {
       setSubmitted(true);
     } catch (error) {
       console.error("Error submitting feedback:", error);
-      alert("Failed to send feedback. Check your internet connection.");
+      alert("Failed to send feedback.");
     } finally {
       setIsSubmitting(false);
     }
@@ -148,25 +148,24 @@ export default function Feedback() {
                     {feedbackList.map((item) => (
                         <div key={item.id} className="pro-panel bg-page p-6 flex flex-col justify-between group relative hover:shadow-xl hover:border-brand/30 transition-all duration-300">
                             
-                            {/* User Info Header */}
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-purple-600 flex items-center justify-center text-white font-bold text-sm uppercase">
+                            {/* USER INFO HEADER (UPDATED) */}
+                            <div className="flex justify-between items-start mb-4 border-b border-border pb-3">
+                                <div className="flex items-center gap-3 w-full">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-purple-600 flex items-center justify-center text-white font-bold text-sm uppercase shrink-0">
                                         {(item.userName || item.userEmail || 'A').charAt(0)}
                                     </div>
-                                    <div>
-                                        {/* Display Name Prominently */}
-                                        <div className="font-bold text-sm text-txt-primary w-40 truncate">
+                                    <div className="flex-1 min-w-0">
+                                        {/* NAME (Large & Bold) */}
+                                        <div className="font-bold text-base text-txt-primary truncate">
                                             {item.userName || 'Anonymous'}
                                         </div>
-                                        {/* Display Email Smaller */}
-                                        <div className="text-xs text-txt-muted w-40 truncate" title={item.userEmail}>
-                                            {item.userEmail}
+                                        {/* EMAIL (Small & Gray) */}
+                                        <div className="text-xs text-txt-muted flex items-center gap-1 truncate" title={item.userEmail}>
+                                            <Mail size={10} /> {item.userEmail}
                                         </div>
-                                        <div className="text-[10px] text-txt-muted/70 mt-0.5">{new Date(item.timestamp).toLocaleDateString()}</div>
                                     </div>
                                 </div>
-                                <div className="flex bg-panel border border-border rounded-lg px-2 py-1 shadow-inner">
+                                <div className="flex bg-panel border border-border rounded-lg px-2 py-1 shadow-inner shrink-0 ml-2">
                                     <Star size={14} className="fill-yellow-400 text-yellow-400 mr-1" />
                                     <span className="text-xs font-bold text-txt-primary">{item.rating}.0</span>
                                 </div>
@@ -191,13 +190,14 @@ export default function Feedback() {
                                 )}
                             </div>
 
-                            {/* Footer / Actions */}
-                            <div className="mt-auto pt-4 border-t border-border flex justify-end">
+                            {/* Timestamp Footer */}
+                            <div className="mt-auto flex justify-between items-center pt-2">
+                                <span className="text-[10px] text-txt-muted">{new Date(item.timestamp).toLocaleString()}</span>
                                 <button 
                                     onClick={() => handleDelete(item.id)} 
                                     className="text-xs text-txt-muted hover:text-red-500 flex items-center gap-1 transition-colors"
                                 >
-                                    <Trash2 size={12}/> Delete Entry
+                                    <Trash2 size={12}/> Delete
                                 </button>
                             </div>
                         </div>
@@ -217,7 +217,6 @@ export default function Feedback() {
   // --- VIEW 3: USER SUBMISSION FORM (Default) ---
   return (
     <div className="max-w-4xl mx-auto space-y-12 animate-fadeIn pb-12">
-      {/* HEADER */}
       <div className="text-center space-y-4 py-8 border-b border-border">
         <h2 className="text-3xl font-bold text-txt-primary flex items-center justify-center gap-2">
           <MessageSquare className="text-brand" size={32} /> User Feedback
@@ -225,11 +224,10 @@ export default function Feedback() {
         <p className="text-txt-secondary">Help us improve your research experience.</p>
       </div>
 
-      {/* FORM */}
       <div className="pro-panel bg-panel p-8 max-w-2xl mx-auto shadow-2xl border border-brand/10">
         <form onSubmit={handleSubmit} className="space-y-8">
           
-          {/* 1. Name Input (Optional) */}
+          {/* Name Input */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-bold text-txt-primary">
               <User size={16} className="text-brand"/> Your Name <span className="text-txt-muted font-normal text-xs">(Optional)</span>
@@ -239,13 +237,13 @@ export default function Feedback() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-page border border-border rounded-xl p-3 text-txt-primary focus:ring-2 focus:ring-brand outline-none placeholder-txt-muted/50 text-sm"
-              placeholder="Enter your name (or leave empty for Anonymous)"
+              placeholder="Enter your name"
             />
           </div>
 
           <div className="w-full h-px bg-border"></div>
 
-          {/* 2. Rating */}
+          {/* Rating */}
           <div className="text-center space-y-3">
             <label className="text-sm font-bold text-txt-muted uppercase tracking-wider">Rate your experience</label>
             <div className="flex justify-center gap-2">
@@ -265,18 +263,11 @@ export default function Feedback() {
                 </button>
               ))}
             </div>
-            <div className="h-4 text-sm font-bold text-brand">
-              {rating === 1 && "Needs Improvement"}
-              {rating === 2 && "Fair"}
-              {rating === 3 && "Good"}
-              {rating === 4 && "Very Good"}
-              {rating === 5 && "Excellent!"}
-            </div>
           </div>
 
           <div className="w-full h-px bg-border"></div>
 
-          {/* 3. Improvements */}
+          {/* Improvements */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-bold text-txt-primary">
               <Wrench size={16} className="text-brand"/> What can we improve?
@@ -285,11 +276,11 @@ export default function Feedback() {
               value={improvements}
               onChange={(e) => setImprovements(e.target.value)}
               className="w-full h-24 bg-page border border-border rounded-xl p-4 text-txt-primary focus:ring-2 focus:ring-brand outline-none resize-none placeholder-txt-muted/50 text-sm"
-              placeholder="e.g. The chat sometimes lags, or I want a darker theme..."
+              placeholder="e.g. The chat sometimes lags..."
             />
           </div>
 
-          {/* 4. Best Part */}
+          {/* Best Part */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-bold text-txt-primary">
               <Quote size={16} className="text-brand"/> What do you like best?
