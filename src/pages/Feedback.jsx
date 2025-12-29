@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useFirebase } from '../hooks/useFirebase';
 import { 
   Star, Send, MessageSquare, ThumbsUp, Wrench, ShieldAlert, 
-  Loader, Trash2, TrendingUp, Users, Quote 
+  Loader, Trash2, TrendingUp, Users, Quote, User 
 } from 'lucide-react';
 import { collection, addDoc, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
@@ -13,6 +13,7 @@ export default function Feedback() {
   const { user, db } = useFirebase();
   
   // Form States
+  const [name, setName] = useState(''); // <--- New State for Name
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [improvements, setImprovements] = useState('');
@@ -29,6 +30,10 @@ export default function Feedback() {
     if (user?.email === ADMIN_EMAIL) {
       setIsAdmin(true);
       fetchFeedback();
+    }
+    // Pre-fill name if registered user has one
+    if (user?.displayName) {
+        setName(user.displayName);
     }
   }, [user]);
 
@@ -63,7 +68,8 @@ export default function Feedback() {
     try {
       await addDoc(collection(db, 'feedback'), {
         userId: user?.uid || 'guest',
-        userEmail: user?.email || 'Anonymous Guest',
+        userEmail: user?.email || 'Guest User',
+        userName: name.trim() || 'Anonymous', // <--- Logic to handle empty name
         rating,
         improvements,
         bestPart,
@@ -145,12 +151,19 @@ export default function Feedback() {
                             {/* User Info Header */}
                             <div className="flex justify-between items-start mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-                                        {item.userEmail.charAt(0).toUpperCase()}
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-purple-600 flex items-center justify-center text-white font-bold text-sm uppercase">
+                                        {(item.userName || item.userEmail || 'A').charAt(0)}
                                     </div>
                                     <div>
-                                        <div className="font-bold text-sm text-txt-primary w-40 truncate" title={item.userEmail}>{item.userEmail}</div>
-                                        <div className="text-xs text-txt-muted">{new Date(item.timestamp).toLocaleDateString()}</div>
+                                        {/* Display Name Prominently */}
+                                        <div className="font-bold text-sm text-txt-primary w-40 truncate">
+                                            {item.userName || 'Anonymous'}
+                                        </div>
+                                        {/* Display Email Smaller */}
+                                        <div className="text-xs text-txt-muted w-40 truncate" title={item.userEmail}>
+                                            {item.userEmail}
+                                        </div>
+                                        <div className="text-[10px] text-txt-muted/70 mt-0.5">{new Date(item.timestamp).toLocaleDateString()}</div>
                                     </div>
                                 </div>
                                 <div className="flex bg-panel border border-border rounded-lg px-2 py-1 shadow-inner">
@@ -216,7 +229,23 @@ export default function Feedback() {
       <div className="pro-panel bg-panel p-8 max-w-2xl mx-auto shadow-2xl border border-brand/10">
         <form onSubmit={handleSubmit} className="space-y-8">
           
-          {/* 1. Rating */}
+          {/* 1. Name Input (Optional) */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-bold text-txt-primary">
+              <User size={16} className="text-brand"/> Your Name <span className="text-txt-muted font-normal text-xs">(Optional)</span>
+            </label>
+            <input 
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-page border border-border rounded-xl p-3 text-txt-primary focus:ring-2 focus:ring-brand outline-none placeholder-txt-muted/50 text-sm"
+              placeholder="Enter your name (or leave empty for Anonymous)"
+            />
+          </div>
+
+          <div className="w-full h-px bg-border"></div>
+
+          {/* 2. Rating */}
           <div className="text-center space-y-3">
             <label className="text-sm font-bold text-txt-muted uppercase tracking-wider">Rate your experience</label>
             <div className="flex justify-center gap-2">
@@ -247,7 +276,7 @@ export default function Feedback() {
 
           <div className="w-full h-px bg-border"></div>
 
-          {/* 2. Improvements */}
+          {/* 3. Improvements */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-bold text-txt-primary">
               <Wrench size={16} className="text-brand"/> What can we improve?
@@ -260,7 +289,7 @@ export default function Feedback() {
             />
           </div>
 
-          {/* 3. Best Part */}
+          {/* 4. Best Part */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-bold text-txt-primary">
               <Quote size={16} className="text-brand"/> What do you like best?
