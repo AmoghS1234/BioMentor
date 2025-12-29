@@ -7,7 +7,7 @@ import {
 import { collection, addDoc, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
 // ⚠️ REPLACE THIS WITH YOUR EXACT LOGIN EMAIL
-const ADMIN_EMAIL = 'your-email@gmail.com'; 
+const ADMIN_EMAIL = 'amogh.sushilendra@gmail.com'; 
 
 export default function Feedback() {
   const { user, db } = useFirebase();
