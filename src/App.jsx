@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useFirebase } from './hooks/useFirebase';
-import { useTour } from './context/TourContext'; // Import Tour Context
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'; // Firestore imports
+import { useTour } from './context/TourContext'; 
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'; 
 import { Loader } from 'lucide-react';
 
 // --- COMPONENTS ---
 import Sidebar from './components/Sidebar';
 import TourMenu from './components/TourMenu'; 
-import GuestWelcome from './components/GuestWelcome'; // <--- NEW IMPORT
+import GuestWelcome from './components/GuestWelcome';
 
 // --- PAGES ---
 import Home from './pages/Home';
@@ -28,25 +28,24 @@ import BioNotes from './pages/BioNotes';
 import LoginPage from './pages/LoginPage';
 import UserProfile from './pages/UserProfile';
 import Settings from './pages/Settings';
+import Feedback from './pages/Feedback'; // Added
 
 export default function App() {
     const { user, isAuthReady, db } = useFirebase();
     const { startMainTour } = useTour();
     
     const [showGuestModal, setShowGuestModal] = useState(false);
-    const hasCheckedTour = useRef(false); // Prevents double-checking in strict mode
+    const hasCheckedTour = useRef(false);
 
     // --- ONBOARDING LOGIC ---
     useEffect(() => {
         const checkOnboarding = async () => {
-            // Only run if user is logged in and we haven't checked yet
             if (!user || !db || hasCheckedTour.current) return;
             
             hasCheckedTour.current = true;
 
             // SCENARIO 1: GUEST USER
             if (user.isAnonymous) {
-                // Check session storage so we don't annoy them on refresh
                 const sessionGuest = sessionStorage.getItem('guestWelcomeSeen');
                 if (!sessionGuest) {
                     setShowGuestModal(true);
@@ -62,15 +61,12 @@ export default function App() {
 
                 if (userSnap.exists()) {
                     const data = userSnap.data();
-                    // If 'hasSeenTour' is missing or false, start the tour
                     if (!data.hasSeenTour) {
-                        startMainTour(); // <--- AUTO START
-                        
-                        // Immediately mark as seen in DB
+                        startMainTour();
                         await updateDoc(userRef, { hasSeenTour: true });
                     }
                 } else {
-                    // Edge case: User doc doesn't exist yet (just created)
+                    // New user doc creation fallback
                     startMainTour();
                     await setDoc(userRef, { 
                         email: user.email, 
@@ -114,7 +110,6 @@ export default function App() {
             
             <TourMenu /> 
             
-            {/* Show Guest Modal if state is true */}
             {showGuestModal && <GuestWelcome onClose={() => setShowGuestModal(false)} />}
             
             <Sidebar />
@@ -127,6 +122,7 @@ export default function App() {
                         <Route path="/notes" element={<BioNotes />} />
                         <Route path="/profile" element={<UserProfile />} />
                         <Route path="/settings" element={<Settings />} />
+                        <Route path="/feedback" element={<Feedback />} /> {/* Added */}
 
                         <Route path="/tools" element={<BioTools />} />
                         <Route path="/aligner" element={<SequenceAligner />} />
