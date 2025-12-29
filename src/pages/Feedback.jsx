@@ -68,7 +68,6 @@ export default function Feedback() {
     try {
       await addDoc(collection(db, 'feedback'), {
         userId: user?.uid || 'guest',
-        // We still save email in DB for reference, but won't display it in UI
         userEmail: user?.email || 'Guest User', 
         userName: name.trim() || 'Anonymous', 
         rating,
@@ -149,14 +148,13 @@ export default function Feedback() {
                     {feedbackList.map((item) => (
                         <div key={item.id} className="pro-panel bg-page p-6 flex flex-col justify-between group relative hover:shadow-xl hover:border-brand/30 transition-all duration-300">
                             
-                            {/* USER INFO HEADER (UPDATED - NO EMAIL) */}
+                            {/* USER INFO HEADER */}
                             <div className="flex justify-between items-center mb-4 border-b border-border pb-3">
                                 <div className="flex items-center gap-3 w-full">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-purple-600 flex items-center justify-center text-white font-bold text-sm uppercase shrink-0">
                                         {(item.userName || 'A').charAt(0)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        {/* NAME (Large & Bold) */}
                                         <div className="font-bold text-base text-txt-primary truncate">
                                             {item.userName || 'Anonymous'}
                                         </div>
@@ -187,12 +185,11 @@ export default function Feedback() {
                                 )}
                             </div>
 
-                            {/* Timestamp Footer */}
-                            <div className="mt-auto flex justify-between items-center pt-2">
-                                <span className="text-[10px] text-txt-muted">{new Date(item.timestamp).toLocaleString()}</span>
+                            {/* Footer Actions */}
+                            <div className="mt-auto flex justify-end items-center pt-2 border-t border-border">
                                 <button 
                                     onClick={() => handleDelete(item.id)} 
-                                    className="text-xs text-txt-muted hover:text-red-500 flex items-center gap-1 transition-colors"
+                                    className="text-xs text-txt-muted hover:text-red-500 flex items-center gap-1 transition-colors mt-2"
                                 >
                                     <Trash2 size={12}/> Delete
                                 </button>
