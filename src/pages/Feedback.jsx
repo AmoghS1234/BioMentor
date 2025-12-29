@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useFirebase } from '../hooks/useFirebase';
-import { Star, Send, MessageSquare, ThumbsUp, Wrench, ShieldAlert, Loader, Trash2 } from 'lucide-react';
+import { 
+  Star, Send, MessageSquare, ThumbsUp, Wrench, ShieldAlert, 
+  Loader, Trash2, TrendingUp, Users, Quote 
+} from 'lucide-react';
 import { collection, addDoc, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
-// ⚠️ REPLACE THIS WITH YOUR ACTUAL EMAIL TO SEE THE ADMIN PANEL
-const ADMIN_EMAIL = 'amogh.sushilendra@gmail.com'; 
+// ⚠️ REPLACE THIS WITH YOUR EXACT LOGIN EMAIL
+const ADMIN_EMAIL = 'your-email@gmail.com'; 
 
 export default function Feedback() {
   const { user, db } = useFirebase();
@@ -43,6 +46,15 @@ export default function Feedback() {
     }
   };
 
+  // Calculate Stats for Admin Dashboard
+  const stats = useMemo(() => {
+    if (feedbackList.length === 0) return { avg: 0, total: 0, stars: 0 };
+    const total = feedbackList.length;
+    const sum = feedbackList.reduce((acc, curr) => acc + (curr.rating || 0), 0);
+    const avg = (sum / total).toFixed(1);
+    return { avg, total };
+  }, [feedbackList]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (rating === 0) return alert("Please select a rating!");
@@ -51,7 +63,7 @@ export default function Feedback() {
     try {
       await addDoc(collection(db, 'feedback'), {
         userId: user?.uid || 'guest',
-        userEmail: user?.email || 'Anonymous',
+        userEmail: user?.email || 'Anonymous Guest',
         rating,
         improvements,
         bestPart,
@@ -60,7 +72,7 @@ export default function Feedback() {
       setSubmitted(true);
     } catch (error) {
       console.error("Error submitting feedback:", error);
-      alert("Failed to send feedback. Please try again.");
+      alert("Failed to send feedback. Check your internet connection.");
     } finally {
       setIsSubmitting(false);
     }
@@ -69,25 +81,129 @@ export default function Feedback() {
   const handleDelete = async (id) => {
       if(!confirm("Delete this feedback?")) return;
       await deleteDoc(doc(db, 'feedback', id));
-      fetchFeedback(); // Refresh list
+      fetchFeedback(); 
   };
 
+  // --- VIEW 1: SUCCESS MESSAGE ---
   if (submitted) {
     return (
       <div className="h-[calc(100vh-100px)] flex flex-col items-center justify-center animate-fadeIn text-center space-y-4">
-        <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-4">
+        <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-4 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
           <ThumbsUp size={40} />
         </div>
-        <h2 className="text-3xl font-bold text-txt-primary">Thank You!</h2>
-        <p className="text-txt-secondary max-w-md">Your feedback helps us make BioMentor better for everyone.</p>
+        <h2 className="text-4xl font-bold text-txt-primary">Thank You!</h2>
+        <p className="text-txt-secondary max-w-md text-lg">Your feedback helps build a better BioMentor.</p>
         <button onClick={() => window.history.back()} className="mt-8 text-brand hover:underline font-bold">Return to Settings</button>
       </div>
     );
   }
 
+  // --- VIEW 2: ADMIN DASHBOARD (Only for You) ---
+  if (isAdmin) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-8 animate-fadeIn pb-12">
+        {/* Dashboard Header */}
+        <div className="flex flex-col md:flex-row justify-between items-end border-b border-border pb-6 gap-4">
+            <div>
+                <h2 className="text-3xl font-bold text-txt-primary flex items-center gap-2">
+                    <ShieldAlert className="text-brand" /> Admin Dashboard
+                </h2>
+                <p className="text-txt-secondary mt-1">User Feedback & Sentiment Analysis</p>
+            </div>
+            <button onClick={fetchFeedback} className="pro-btn text-xs">Refresh Data</button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="pro-panel bg-panel p-6 flex items-center gap-4 border-l-4 border-brand shadow-lg">
+                <div className="p-4 rounded-full bg-brand/10 text-brand"><TrendingUp size={24} /></div>
+                <div>
+                    <div className="text-3xl font-bold text-txt-primary">{stats.avg} / 5.0</div>
+                    <div className="text-xs text-txt-muted uppercase font-bold tracking-wider">Average Rating</div>
+                </div>
+            </div>
+            <div className="pro-panel bg-panel p-6 flex items-center gap-4 border-l-4 border-blue-500 shadow-lg">
+                <div className="p-4 rounded-full bg-blue-500/10 text-blue-500"><Users size={24} /></div>
+                <div>
+                    <div className="text-3xl font-bold text-txt-primary">{stats.total}</div>
+                    <div className="text-xs text-txt-muted uppercase font-bold tracking-wider">Total Responses</div>
+                </div>
+            </div>
+        </div>
+
+        {/* Feedback Grid */}
+        <div className="space-y-4">
+            <h3 className="text-xl font-bold text-txt-primary">Recent Feedback</h3>
+            
+            {loadingAdmin ? (
+                <div className="text-center py-20"><Loader className="animate-spin mx-auto text-brand" size={32}/></div>
+            ) : (
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {feedbackList.map((item) => (
+                        <div key={item.id} className="pro-panel bg-page p-6 flex flex-col justify-between group relative hover:shadow-xl hover:border-brand/30 transition-all duration-300">
+                            
+                            {/* User Info Header */}
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                                        {item.userEmail.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-sm text-txt-primary w-40 truncate" title={item.userEmail}>{item.userEmail}</div>
+                                        <div className="text-xs text-txt-muted">{new Date(item.timestamp).toLocaleDateString()}</div>
+                                    </div>
+                                </div>
+                                <div className="flex bg-panel border border-border rounded-lg px-2 py-1 shadow-inner">
+                                    <Star size={14} className="fill-yellow-400 text-yellow-400 mr-1" />
+                                    <span className="text-xs font-bold text-txt-primary">{item.rating}.0</span>
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="space-y-4 mb-6">
+                                {item.bestPart && (
+                                    <div className="relative pl-4 border-l-2 border-green-500/50">
+                                        <div className="text-[10px] uppercase font-bold text-green-500 mb-1">Loved</div>
+                                        <p className="text-sm text-txt-secondary leading-relaxed italic">"{item.bestPart}"</p>
+                                    </div>
+                                )}
+                                {item.improvements && (
+                                    <div className="relative pl-4 border-l-2 border-red-500/50">
+                                        <div className="text-[10px] uppercase font-bold text-red-500 mb-1">Needs Work</div>
+                                        <p className="text-sm text-txt-secondary leading-relaxed italic">"{item.improvements}"</p>
+                                    </div>
+                                )}
+                                {!item.bestPart && !item.improvements && (
+                                    <p className="text-sm text-txt-muted italic">No written feedback provided.</p>
+                                )}
+                            </div>
+
+                            {/* Footer / Actions */}
+                            <div className="mt-auto pt-4 border-t border-border flex justify-end">
+                                <button 
+                                    onClick={() => handleDelete(item.id)} 
+                                    className="text-xs text-txt-muted hover:text-red-500 flex items-center gap-1 transition-colors"
+                                >
+                                    <Trash2 size={12}/> Delete Entry
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+            {feedbackList.length === 0 && !loadingAdmin && (
+                <div className="text-center py-20 border-2 border-dashed border-border rounded-2xl">
+                    <p className="text-txt-muted">No feedback collected yet.</p>
+                </div>
+            )}
+        </div>
+      </div>
+    );
+  }
+
+  // --- VIEW 3: USER SUBMISSION FORM (Default) ---
   return (
     <div className="max-w-4xl mx-auto space-y-12 animate-fadeIn pb-12">
-      
       {/* HEADER */}
       <div className="text-center space-y-4 py-8 border-b border-border">
         <h2 className="text-3xl font-bold text-txt-primary flex items-center justify-center gap-2">
@@ -96,8 +212,8 @@ export default function Feedback() {
         <p className="text-txt-secondary">Help us improve your research experience.</p>
       </div>
 
-      {/* FEEDBACK FORM */}
-      <div className="pro-panel bg-panel p-8 max-w-2xl mx-auto shadow-xl">
+      {/* FORM */}
+      <div className="pro-panel bg-panel p-8 max-w-2xl mx-auto shadow-2xl border border-brand/10">
         <form onSubmit={handleSubmit} className="space-y-8">
           
           {/* 1. Rating */}
@@ -114,13 +230,22 @@ export default function Feedback() {
                   className="transition-transform hover:scale-110 focus:outline-none"
                 >
                   <Star 
-                    size={32} 
-                    className={`${(hoverRating || rating) >= star ? 'fill-yellow-400 text-yellow-400' : 'text-txt-muted'}`} 
+                    size={36} 
+                    className={`${(hoverRating || rating) >= star ? 'fill-brand text-brand drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'text-border fill-input'}`} 
                   />
                 </button>
               ))}
             </div>
+            <div className="h-4 text-sm font-bold text-brand">
+              {rating === 1 && "Needs Improvement"}
+              {rating === 2 && "Fair"}
+              {rating === 3 && "Good"}
+              {rating === 4 && "Very Good"}
+              {rating === 5 && "Excellent!"}
+            </div>
           </div>
+
+          <div className="w-full h-px bg-border"></div>
 
           {/* 2. Improvements */}
           <div className="space-y-2">
@@ -130,7 +255,7 @@ export default function Feedback() {
             <textarea 
               value={improvements}
               onChange={(e) => setImprovements(e.target.value)}
-              className="w-full h-32 bg-page border border-border rounded-xl p-4 text-txt-primary focus:ring-2 focus:ring-brand outline-none resize-none"
+              className="w-full h-24 bg-page border border-border rounded-xl p-4 text-txt-primary focus:ring-2 focus:ring-brand outline-none resize-none placeholder-txt-muted/50 text-sm"
               placeholder="e.g. The chat sometimes lags, or I want a darker theme..."
             />
           </div>
@@ -138,12 +263,12 @@ export default function Feedback() {
           {/* 3. Best Part */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-bold text-txt-primary">
-              <ThumbsUp size={16} className="text-green-500"/> What do you like best?
+              <Quote size={16} className="text-brand"/> What do you like best?
             </label>
             <textarea 
               value={bestPart}
               onChange={(e) => setBestPart(e.target.value)}
-              className="w-full h-32 bg-page border border-border rounded-xl p-4 text-txt-primary focus:ring-2 focus:ring-brand outline-none resize-none"
+              className="w-full h-24 bg-page border border-border rounded-xl p-4 text-txt-primary focus:ring-2 focus:ring-brand outline-none resize-none placeholder-txt-muted/50 text-sm"
               placeholder="e.g. The 3D protein viewer is amazing!"
             />
           </div>
@@ -157,54 +282,6 @@ export default function Feedback() {
           </button>
         </form>
       </div>
-
-      {/* --- ADMIN SECTION (ONLY VISIBLE TO YOU) --- */}
-      {isAdmin && (
-        <div className="mt-20 pt-10 border-t-2 border-dashed border-red-500/30">
-          <div className="flex items-center gap-3 mb-6 text-red-500">
-            <ShieldAlert size={24} />
-            <h3 className="text-2xl font-bold">Admin Feedback Dashboard</h3>
-          </div>
-
-          {loadingAdmin ? (
-            <div className="text-center py-10"><Loader className="animate-spin mx-auto text-txt-muted"/></div>
-          ) : (
-            <div className="grid gap-4">
-              {feedbackList.map((item) => (
-                <div key={item.id} className="pro-panel p-6 bg-page border border-border relative group">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="font-bold text-txt-primary">{item.userEmail}</span>
-                            <span className="text-xs text-txt-muted">({new Date(item.timestamp).toLocaleDateString()})</span>
-                        </div>
-                        <div className="flex gap-1">
-                            {[...Array(5)].map((_, i) => (
-                                <Star key={i} size={14} className={i < item.rating ? "fill-yellow-400 text-yellow-400" : "text-txt-muted/30"} />
-                            ))}
-                        </div>
-                    </div>
-                    <button onClick={() => handleDelete(item.id)} className="text-txt-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16}/></button>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div className="bg-red-500/5 p-3 rounded border border-red-500/10">
-                        <strong className="block text-red-400 text-xs uppercase mb-1">Improvements</strong>
-                        <p className="text-txt-secondary">{item.improvements || "None"}</p>
-                    </div>
-                    <div className="bg-green-500/5 p-3 rounded border border-green-500/10">
-                        <strong className="block text-green-400 text-xs uppercase mb-1">Best Part</strong>
-                        <p className="text-txt-secondary">{item.bestPart || "None"}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {feedbackList.length === 0 && <p className="text-txt-muted italic">No feedback received yet.</p>}
-            </div>
-          )}
-        </div>
-      )}
-
     </div>
   );
 }

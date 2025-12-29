@@ -27,10 +27,23 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // We assign specific IDs to groups for the Tour to find
+  // --- HELPER: DETERMINE DISPLAY NAME ---
+  // If no Display Name is set, fall back to Email. Only use 'Guest' if anonymous.
+  const getDisplayLabel = () => {
+    if (!user) return 'Guest';
+    if (user.isAnonymous) return 'Guest Visitor';
+    return user.displayName || user.email || 'User';
+  };
+
+  const getAvatarContent = () => {
+    if (!user || user.isAnonymous) return <User size={16} />;
+    const label = getDisplayLabel();
+    return label[0].toUpperCase();
+  };
+
   const navGroups = [
     {
-      id: "nav-workspace", // <--- ID for Tour
+      id: "nav-workspace",
       title: "Workspace",
       items: [
         { path: '/', label: 'Dashboard', icon: <Home size={18} /> },
@@ -39,7 +52,7 @@ export default function Sidebar() {
       ]
     },
     {
-      id: "nav-tools", // <--- ID for Tour
+      id: "nav-tools",
       title: "Analysis Tools",
       items: [
         { path: '/tools', label: 'Bio Toolkit', icon: <Calculator size={18} /> },
@@ -49,7 +62,7 @@ export default function Sidebar() {
       ]
     },
     {
-      id: "nav-ref", // <--- ID for Tour
+      id: "nav-ref",
       title: "Reference Data",
       items: [
         { path: '/protocols', label: 'Lab Protocols', icon: <ClipboardList size={18} /> },
@@ -58,7 +71,7 @@ export default function Sidebar() {
       ]
     },
     {
-      id: "nav-learn", // <--- ID for Tour
+      id: "nav-learn",
       title: "Knowledge Base",
       items: [
         { path: '/tutorials', label: 'Tutorials', icon: <GraduationCap size={18} /> },
@@ -85,7 +98,7 @@ export default function Sidebar() {
 
       <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-page border-r border-border transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 flex flex-col shadow-2xl transition-colors duration-300`}>
         
-        {/* Logo with ID */}
+        {/* Logo */}
         <div id="sidebar-logo" className="flex items-center gap-3 h-16 px-6 border-b border-border bg-page shrink-0 transition-colors duration-300">
           <div className="bg-gradient-to-br from-brand to-indigo-600 p-1.5 rounded-lg shadow-lg shadow-brand/20">
             <Dna size={20} className="text-white" />
@@ -97,7 +110,7 @@ export default function Sidebar() {
 
         <nav className="p-4 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
           {navGroups.map((group, idx) => (
-            <div key={idx} id={group.id}> {/* <--- Attach ID here */}
+            <div key={idx} id={group.id}>
               <h3 className="text-xs font-bold text-txt-muted uppercase tracking-wider mb-2 px-3">
                 {group.title}
               </h3>
@@ -129,7 +142,9 @@ export default function Sidebar() {
             <div className="absolute bottom-full left-4 right-4 mb-2 bg-panel border border-border rounded-xl shadow-2xl overflow-hidden animate-fadeIn z-50">
                 <div className="p-3 border-b border-border bg-input/20">
                     <p className="text-xs font-bold text-txt-muted uppercase">Signed in as</p>
-                    <p className="text-sm font-bold text-txt-primary truncate">{user?.email || 'Guest'}</p>
+                    <p className="text-sm font-bold text-txt-primary truncate" title={user?.email}>
+                        {user?.email || (user?.isAnonymous ? 'Guest Account' : 'User')}
+                    </p>
                 </div>
                 <div className="p-1">
                     <button onClick={() => { navigate('/profile'); setShowUserMenu(false); }} className="w-full text-left px-3 py-2 text-sm text-txt-secondary hover:bg-page hover:text-txt-primary rounded-lg flex items-center gap-2">
@@ -147,7 +162,7 @@ export default function Sidebar() {
             </div>
           )}
 
-          {/* User Menu Trigger with ID */}
+          {/* User Menu Trigger */}
           {isAuthReady && user ? (
             <button 
               id="user-menu-trigger" 
@@ -156,10 +171,12 @@ export default function Sidebar() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand font-bold border border-brand/30">
-                  {user.displayName ? user.displayName[0].toUpperCase() : <User size={16} />}
+                  {getAvatarContent()}
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-xs font-bold text-txt-primary truncate">{user.displayName || 'Guest'}</p>
+                  <p className="text-xs font-bold text-txt-primary truncate">
+                    {getDisplayLabel()}
+                  </p>
                 </div>
               </div>
               <ChevronUp size={16} className="text-txt-muted group-hover:text-txt-primary transition-colors" />
