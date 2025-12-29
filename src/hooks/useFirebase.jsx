@@ -160,7 +160,6 @@ export const FirebaseProvider = ({ children }) => {
       localStorage.removeItem('custom-protocols');
       localStorage.removeItem('bio-chat-sessions'); // Clear any cached chat lists
       
-      // Clear Session Storage (like guest tour flags)
       sessionStorage.clear();
 
       // 5. Reload page to force a fresh state
