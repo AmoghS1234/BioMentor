@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useFirebase } from '../hooks/useFirebase';
 import { 
   Star, Send, MessageSquare, ThumbsUp, Wrench, ShieldAlert, 
-  Loader, Trash2, TrendingUp, Users, Quote, User, Mail 
+  Loader, Trash2, TrendingUp, Users, Quote, User 
 } from 'lucide-react';
 import { collection, addDoc, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
@@ -68,8 +68,9 @@ export default function Feedback() {
     try {
       await addDoc(collection(db, 'feedback'), {
         userId: user?.uid || 'guest',
-        userEmail: user?.email || 'Guest User',
-        userName: name.trim() || 'Anonymous', // <--- Ensures Name is saved
+        // We still save email in DB for reference, but won't display it in UI
+        userEmail: user?.email || 'Guest User', 
+        userName: name.trim() || 'Anonymous', 
         rating,
         improvements,
         bestPart,
@@ -148,20 +149,16 @@ export default function Feedback() {
                     {feedbackList.map((item) => (
                         <div key={item.id} className="pro-panel bg-page p-6 flex flex-col justify-between group relative hover:shadow-xl hover:border-brand/30 transition-all duration-300">
                             
-                            {/* USER INFO HEADER (UPDATED) */}
-                            <div className="flex justify-between items-start mb-4 border-b border-border pb-3">
+                            {/* USER INFO HEADER (UPDATED - NO EMAIL) */}
+                            <div className="flex justify-between items-center mb-4 border-b border-border pb-3">
                                 <div className="flex items-center gap-3 w-full">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-purple-600 flex items-center justify-center text-white font-bold text-sm uppercase shrink-0">
-                                        {(item.userName || item.userEmail || 'A').charAt(0)}
+                                        {(item.userName || 'A').charAt(0)}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         {/* NAME (Large & Bold) */}
                                         <div className="font-bold text-base text-txt-primary truncate">
                                             {item.userName || 'Anonymous'}
-                                        </div>
-                                        {/* EMAIL (Small & Gray) */}
-                                        <div className="text-xs text-txt-muted flex items-center gap-1 truncate" title={item.userEmail}>
-                                            <Mail size={10} /> {item.userEmail}
                                         </div>
                                     </div>
                                 </div>
