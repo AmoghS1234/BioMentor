@@ -27,21 +27,15 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- HELPER: SMART NAME DISPLAY ---
+  // --- HELPER: DISPLAY NAME ---
   const getDisplayLabel = () => {
     if (!user) return 'Guest';
-    if (user.isAnonymous) return 'Guest Visitor';
+    if (user.isAnonymous) return 'Guest Account';
     
-    // 1. If real display name exists, use it
+    // If they have a Google Display Name, use it.
     if (user.displayName) return user.displayName;
 
-    // 2. If email exists, try to extract name (e.g. amogh.sushilendra@... -> Amogh)
-    if (user.email) {
-        const namePart = user.email.split('@')[0];
-        // Capitalize first letter
-        return namePart.charAt(0).toUpperCase() + namePart.slice(1);
-    }
-
+    // Otherwise, just use the static text requested
     return 'User Account';
   };
 
@@ -153,7 +147,7 @@ export default function Sidebar() {
                 <div className="p-3 border-b border-border bg-input/20">
                     <p className="text-xs font-bold text-txt-muted uppercase">Signed in as</p>
                     <p className="text-sm font-bold text-txt-primary truncate" title={user?.email}>
-                        {getDisplayLabel()}
+                        {user?.email || 'Guest'}
                     </p>
                 </div>
                 <div className="p-1">
@@ -163,7 +157,6 @@ export default function Sidebar() {
                     <button onClick={() => { navigate('/settings'); setShowUserMenu(false); }} className="w-full text-left px-3 py-2 text-sm text-txt-secondary hover:bg-page hover:text-txt-primary rounded-lg flex items-center gap-2">
                         <Settings size={16} /> Settings
                     </button>
-                    {/* FEEDBACK LINK ADDED HERE 👇 */}
                     <button onClick={() => { navigate('/feedback'); setShowUserMenu(false); }} className="w-full text-left px-3 py-2 text-sm text-txt-secondary hover:bg-page hover:text-txt-primary rounded-lg flex items-center gap-2">
                         <MessageCircle size={16} /> Feedback
                     </button>
@@ -183,11 +176,11 @@ export default function Sidebar() {
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-page transition-colors group"
             >
-              <div className="flex items-center gap-3 min-w-0"> {/* Added min-w-0 to allow flex child truncation */}
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand font-bold border border-brand/30 shrink-0">
                   {getAvatarContent()}
                 </div>
-                <div className="flex-1 min-w-0 text-left"> {/* Added min-w-0 here too */}
+                <div className="flex-1 min-w-0 text-left">
                   <p className="text-xs font-bold text-txt-primary truncate">
                     {getDisplayLabel()}
                   </p>

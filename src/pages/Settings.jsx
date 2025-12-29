@@ -5,7 +5,7 @@ import { useTour } from '../context/TourContext';
 import { useFirebase } from '../hooks/useFirebase';
 import { 
   Palette, Check, PlayCircle, HelpCircle, LayoutDashboard, Grid, 
-  Database, Trash2, AlertTriangle, MessageSquare 
+  Database, Trash2, AlertTriangle
 } from 'lucide-react';
 
 export default function Settings() {
@@ -107,38 +107,7 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* SECTION 3: FEEDBACK */}
-      <div className="space-y-6">
-        <div className="border-b border-border pb-6">
-            <h2 className="text-3xl font-bold text-txt-primary flex items-center gap-3">
-            <MessageSquare className="text-brand" /> Feedback
-            </h2>
-            <p className="text-txt-secondary mt-1">Tell us about your experience.</p>
-        </div>
-
-        <div className="pro-panel p-6 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-brand/50 transition-colors">
-            <div className="flex items-center gap-4">
-                <div className="bg-blue-500/10 w-12 h-12 rounded-xl flex items-center justify-center text-blue-500">
-                    <MessageSquare size={24} />
-                </div>
-                <div>
-                    <h3 className="text-lg font-bold text-txt-primary">Share Your Thoughts</h3>
-                    <p className="text-txt-secondary text-sm">
-                        Found a bug? Have a feature request? Let us know!
-                    </p>
-                </div>
-            </div>
-            
-            <button 
-                onClick={() => navigate('/feedback')}
-                className="pro-btn flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white border-none"
-            >
-                <MessageSquare size={18} /> Give Feedback
-            </button>
-        </div>
-      </div>
-
-      {/* SECTION 4: DANGER ZONE */}
+      {/* SECTION 3: DANGER ZONE */}
       <div className="space-y-6">
         <div className="border-b border-red-500/30 pb-6">
             <h2 className="text-3xl font-bold text-red-500 flex items-center gap-3">
