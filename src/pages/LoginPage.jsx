@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dna, ArrowRight, CheckCircle, Shield, Mail, Lock, User, AlertCircle, Loader, ArrowLeft } from 'lucide-react';
+import { Dna, ArrowRight, CheckCircle, Mail, Lock, User, AlertCircle, Loader, ArrowLeft } from 'lucide-react';
 import { useFirebase } from '../hooks/useFirebase';
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function LoginPage() {
-  const { loginWithEmail, registerWithEmail, loginAsGuest, resetPassword, user } = useFirebase();
+  const { loginWithEmail, loginAsGuest, resetPassword, user, auth, db } = useFirebase();
   const navigate = useNavigate();
   
   const [mode, setMode] = useState('login'); // 'login', 'register', 'reset'
-  const [loading, setLoading] = useState(false); // <--- WE USE THIS ONE STATE FOR ALL LOADING
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   
   const [formData, setFormData] = useState({ email: '', password: '', name: '' });
 
+  // If already logged in, let App.jsx handle the redirection (to Dashboard or VerifyEmail)
   if (user) navigate('/');
 
   const handleSubmit = async (e) => {
@@ -25,8 +28,32 @@ export default function LoginPage() {
 
     try {
       if (mode === 'register') {
-        await registerWithEmail(formData.email, formData.password, formData.name);
-        navigate('/');
+        // --- CUSTOM REGISTRATION FLOW FOR VERIFICATION ---
+        
+        // 1. Create User
+        const res = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        
+        // 2. Update Profile Name
+        await updateProfile(res.user, { displayName: formData.name });
+
+        // 3. Create Firestore Document (Matching your app's structure)
+        await setDoc(doc(db, 'users', res.user.uid), {
+          displayName: formData.name,
+          email: formData.email,
+          xp: 0,
+          joinedAt: Date.now(),
+          role: 'user',
+          solvedChallenges: [],
+          completedModules: [],
+          hasSeenTour: false
+        });
+
+        // 4. SEND VERIFICATION EMAIL 📧
+        await sendEmailVerification(res.user);
+
+        // 5. Redirect to Limbo Page
+        navigate('/verify-email'); 
+
       } else if (mode === 'login') {
         await loginWithEmail(formData.email, formData.password, rememberMe);
         navigate('/');
@@ -48,16 +75,13 @@ export default function LoginPage() {
   const handleGuestLogin = async () => {
       try {
           setError(null);
-          setLoading(true); // <--- FIXED: Changed from setIsLoggingIn to setLoading
-          
-          // Force the tour to show by clearing previous session memory
+          setLoading(true);
           sessionStorage.removeItem('guestWelcomeSeen'); 
-          
           await loginAsGuest(); 
       } catch (err) {
           setError(err.message);
       } finally {
-          setLoading(false); // <--- FIXED: Changed from setIsLoggingIn to setLoading
+          setLoading(false);
       }
   };
 
@@ -103,7 +127,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Only show for Reset Mode */}
           {mode === 'reset' && (
              <button onClick={() => { setMode('login'); setError(''); setSuccessMsg(''); }} className="mb-4 flex items-center gap-2 text-sm text-txt-muted hover:text-brand transition-colors">
                 <ArrowLeft size={14} /> Back to Login

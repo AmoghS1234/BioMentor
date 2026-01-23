@@ -28,7 +28,8 @@ import BioNotes from './pages/BioNotes';
 import LoginPage from './pages/LoginPage';
 import UserProfile from './pages/UserProfile';
 import Settings from './pages/Settings';
-import Feedback from './pages/Feedback'; // Added
+import Feedback from './pages/Feedback'; 
+import VerifyEmail from './pages/VerifyEmail'; // <--- NEW IMPORT
 
 export default function App() {
     const { user, isAuthReady, db } = useFirebase();
@@ -42,6 +43,9 @@ export default function App() {
         const checkOnboarding = async () => {
             if (!user || !db || hasCheckedTour.current) return;
             
+            // Do not run tour for unverified users
+            if (!user.isAnonymous && !user.emailVerified) return;
+
             hasCheckedTour.current = true;
 
             // SCENARIO 1: GUEST USER
@@ -54,7 +58,7 @@ export default function App() {
                 return;
             }
 
-            // SCENARIO 2: REGISTERED USER
+            // SCENARIO 2: REGISTERED & VERIFIED USER
             try {
                 const userRef = doc(db, 'users', user.uid);
                 const userSnap = await getDoc(userRef);
@@ -66,7 +70,7 @@ export default function App() {
                         await updateDoc(userRef, { hasSeenTour: true });
                     }
                 } else {
-                    // New user doc creation fallback
+                    // Fallback for missing user docs
                     startMainTour();
                     await setDoc(userRef, { 
                         email: user.email, 
@@ -104,7 +108,17 @@ export default function App() {
         );
     }
 
-    // 3. Logged In
+    // 3. Logged In BUT Unverified (Gatekeeper)
+    if (!user.isAnonymous && !user.emailVerified) {
+        return (
+            <Routes>
+                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="*" element={<Navigate to="/verify-email" replace />} />
+            </Routes>
+        );
+    }
+
+    // 4. Logged In & Verified (Main App)
     return (
         <div className="min-h-screen bg-page flex text-txt-primary font-sans selection:bg-brand/30 selection:text-white transition-colors duration-300">
             
@@ -122,7 +136,7 @@ export default function App() {
                         <Route path="/notes" element={<BioNotes />} />
                         <Route path="/profile" element={<UserProfile />} />
                         <Route path="/settings" element={<Settings />} />
-                        <Route path="/feedback" element={<Feedback />} /> {/* Added */}
+                        <Route path="/feedback" element={<Feedback />} />
 
                         <Route path="/tools" element={<BioTools />} />
                         <Route path="/aligner" element={<SequenceAligner />} />
