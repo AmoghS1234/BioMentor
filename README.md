@@ -1,4 +1,4 @@
-🧬 BioMentor: AI-Powered Bioinformatics Learning Platform
+# 🧬 BioMentor: AI-Powered Bioinformatics Learning Platform
 
 BioMentor is an interactive educational platform designed to help students and researchers master bioinformatics concepts. It combines structured static content with AI-generated quizzes, tutorials, flashcards, and coding challenges to create an infinite, personalized learning experience.
 
@@ -7,7 +7,7 @@ The platform is gamified with XP tracking, levels, and progress monitoring to ke
 
 Access the application here: https://bio-mentor.vercel.app
 
-🛠️ Tech Stack
+## 🛠️ Tech Stack
 
     Frontend: React (Vite)
 
