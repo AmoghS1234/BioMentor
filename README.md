@@ -112,43 +112,6 @@ GitHub Actions        // CI/CD pipeline
 ```
 
 ---
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Google Gemini API key
-
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone https://github.com/AmoghS1234/BioMentor.git
-cd BioMentor
-```
-
-2. **Install dependencies**
-```bash
-npm install
-```
-
-3. **Set up environment variables**
-```bash
-cp .env.example .env.local
-# Add your Gemini API key to .env.local
-```
-
-4. **Start development server**
-```bash
-npm run dev
-```
-
-5. **Open your browser**
-```bash
-# Navigate to http://localhost:5173
-```
-
 ---
 
 ## 📁 Project Structure
@@ -177,27 +140,6 @@ BioMentor/
 
 ---
 
-## 🎯 Available Routes
-
-| Route | Component | Description |
-|-------|-----------|-------------|
-| `/` | Home | Main dashboard |
-| `/chat` | ChatInterface | AI-powered Q&A |
-| `/tools` | BioTools | Bioinformatics utilities |
-| `/aligner` | SequenceAligner | Sequence alignment |
-| `/protein` | ProteinViewer | 3D protein visualization |
-| `/quiz` | QuizInterface | Dynamic quiz generation |
-| `/study` | StudyDeck | Flashcard system |
-| `/tutorials` | Tutorials | Guided learning |
-| `/pubmed` | PubmedSearch | Literature search |
-| `/protocols` | LabProtocols | Experimental procedures |
-| `/notes` | BioNotes | Personal notes |
-| `/resources` | Resources | Learning materials |
-| `/profile` | UserProfile | User dashboard |
-| `/settings` | Settings | App configuration |
-
----
-
 ## 🔧 Development Scripts
 
 ```json
@@ -211,27 +153,6 @@ BioMentor/
 
 ---
 
-## 🌟 Key Integrations
-
-### 🔬 **3D Molecular Visualization**
-- **3Dmol.js** integration for interactive protein structures
-- Real-time molecular rendering and manipulation
-- Support for multiple file formats (PDB, MOL, SDF)
-
-### 🤖 **AI-Powered Features**
-- **Context-aware responses** using knowledge base
-- **Dynamic content generation** for quizzes and tutorials
-- **Smart problem solving** with step-by-step explanations
-- **Personalized learning paths** based on user progress
-
-### 🔥 **Real-time Features**
-- **Live chat synchronization** across devices
-- **Instant progress tracking** with Firestore
-- **Real-time collaboration** capabilities
-- **Offline support** with local caching
-
----
-
 ## 📊 Performance Features
 
 - ⚡ **Lightning-fast builds** with Vite
@@ -239,16 +160,6 @@ BioMentor/
 - 📱 **PWA-ready** for mobile experience
 - 🔄 **Lazy loading** for better performance
 - 💾 **Smart caching** strategies
-
----
-
-## 🙏 Acknowledgments
-
-- **Google Gemini API** for AI capabilities
-- **Firebase** for backend services
-- **3Dmol.js** for molecular visualization
-- **Vercel** for hosting and deployment
-- **React Community** for amazing tools and libraries
 
 ---
 
